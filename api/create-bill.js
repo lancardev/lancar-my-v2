@@ -7,23 +7,24 @@ export default async function handler(req, res) {
     }
   
     try {
-      // Bangun body x-www-form-urlencoded
+      // Build x-www-form-urlencoded body
       const form = new URLSearchParams({
         userSecretKey:  process.env.TOYYIBPAY_SECRET,
         categoryCode:    process.env.TOYYIBPAY_CATEGORY,
         billName:        'Langganan Lancar.my',
         billDescription: 'Akses penuh Lancar.my selama 1 bulan',
         billPriceSetting:'1',
-        billAmount:      '100',
-        billPayorInfo:   '1',                    // collect payor info
-        billTo:          '{CUSTOMER_EMAIL}',     // ganti dengan email payor
-        billEmail:       '{CUSTOMER_EMAIL}',     // perlu diisi juga
+        billAmount:      '100',            // RM1.00 → 100 sen
+        billPayorInfo:   '1',              // minta email sahaja
+        billTo:          'Pelanggan',      // nama statik supaya tidak kosong
+        // Tiada billEmail: ToyyibPay akan buka form input email
         billReturnUrl:
           'https://lancar-my-v2.vercel.app/dashboard.html?email={CUSTOMER_EMAIL}',
         billCallbackUrl:
           'https://lancar-my-v2.vercel.app/api/verify-payment'
       });
   
+      // Panggil ToyyibPay API
       const resp = await fetch(
         'https://toyyibpay.com/index.php/api/createBill',
         {
@@ -39,7 +40,9 @@ export default async function handler(req, res) {
   
       const json = await resp.json();
       let billCode;
-      if (Array.isArray(json) && json.length && json[0].BillCode) {
+  
+      // Tangani bentuk response array atau objek
+      if (Array.isArray(json) && json.length > 0 && json[0].BillCode) {
         billCode = json[0].BillCode;
       } else if (json.BillCode) {
         billCode = json.BillCode;
