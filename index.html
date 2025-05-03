@@ -55,7 +55,7 @@
           // 2) Jika 200, parse JSON
           const { billCode } = await resp.json();
           // 3) Redirect ke ToyyibPay
-          window.location.href = `https://toyyibpay.com/${billCode}`;
+          window.location.href = `https://dev.toyyibpay.com/${billCode}`;
 
         } catch (err) {
           console.error('create-bill error:', err);
