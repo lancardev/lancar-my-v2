@@ -14,17 +14,16 @@ export default async function handler(req, res) {
         billName:        'Langganan Lancar.my',
         billDescription: 'Akses penuh Lancar.my selama 1 bulan',
         billPriceSetting:'1',
-        billAmount:      '100',            // RM1.00 → 100 sen
-        billPayorInfo:   '1',              // minta email sahaja
-        billTo:          'Pelanggan',      // nama statik supaya tidak kosong
-        // Tiada billEmail: ToyyibPay akan buka form input email
+        billAmount:      '100',                     // RM1.00 → 100 sen
+        billPayorInfo:   '1',                       // minta info payor
+        billTo:          '{CUSTOMER_EMAIL}',        // placeholder nama
+        billEmail:       '{CUSTOMER_EMAIL}',        // placeholder e-mel
         billReturnUrl:
           'https://lancar-my-v2.vercel.app/dashboard.html?email={CUSTOMER_EMAIL}',
         billCallbackUrl:
           'https://lancar-my-v2.vercel.app/api/verify-payment'
       });
   
-      // Panggil ToyyibPay API
       const resp = await fetch(
         'https://toyyibpay.com/index.php/api/createBill',
         {
@@ -41,7 +40,6 @@ export default async function handler(req, res) {
       const json = await resp.json();
       let billCode;
   
-      // Tangani bentuk response array atau objek
       if (Array.isArray(json) && json.length > 0 && json[0].BillCode) {
         billCode = json[0].BillCode;
       } else if (json.BillCode) {
