@@ -22,24 +22,35 @@ export default async function handler(req, res) {
           'https://lancar-my-v2.vercel.app/api/verify-payment'
       });
   
-      // Panggil ToyyibPay API dengan global fetch
       const resp = await fetch(
         'https://toyyibpay.com/index.php/api/createBill',
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: form
         }
       );
   
       if (!resp.ok) {
-        throw new Error(`ToyyibPay API returned ${resp.status}`);
+        throw new Error(`ToyyibPay API returned status ${resp.status}`);
       }
   
-      const [ result ] = await resp.json();
-      return res.status(200).json({ billCode: result.BillCode });
+      const json = await resp.json();
+  
+      // Tentukan billCode berdasarkan bentuk response
+      let billCode;
+      if (Array.isArray(json) && json.length > 0 && json[0].BillCode) {
+        billCode = json[0].BillCode;
+      } else if (json.BillCode) {
+        billCode = json.BillCode;
+      } else if (json.error) {
+        throw new Error(json.error);
+      } else {
+        throw new Error(`Unexpected response: ${JSON.stringify(json)}`);
+      }
+  
+      return res.status(200).json({ billCode });
+  
     } catch (err) {
       console.error('create-bill error:', err);
       return res.status(500).json({ error: err.message });
