@@ -13,12 +13,56 @@
       Lancar.my memudahkan anda mencipta hingga 111 laman pendaratan secara percuma.
       Daftar sekarang dan teruskan ke pembayaran.
     </p>
-
-    <!-- Butang DAFTAR SEKARANG -->
     <button id="daftar-btn" class="btn-primary">DAFTAR SEKARANG</button>
   </header>
 
-  <!-- Module script untuk homepage -->
-  <script type="module" src="app.js"></script>
+  <!-- Inline JS supaya event listener pasti dipasang -->
+  <script>
+    // Debug: pastikan skrip ini dimuat
+    console.log('Homepage script loaded');
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('daftar-btn');
+      if (!btn) {
+        console.error('Butang #daftar-btn tidak dijumpai');
+        return;
+      }
+      btn.addEventListener('click', () => {
+        console.log('Daftar button clicked');
+        goToCheckout();
+      });
+    });
+
+    async function goToCheckout() {
+      const form = new URLSearchParams({
+        userSecretKey: 'kyyn0vbn-0ud7-z423-nafu-fro9p9o49cvw',
+        categoryCode:   'mi2pe6lg',
+        billName:       'Langganan Lancar.my',
+        billDescription:'Akses penuh Lancar.my selama 1 bulan',
+        billPriceSetting: '1',
+        billAmount:      '100',
+        billPayorInfo:   '1',
+        // placeholder {CUSTOMER_EMAIL} akan diganti ToyyibPay
+        billReturnUrl:
+          'https://lancar-my-v2.vercel.app/dashboard.html?email={CUSTOMER_EMAIL}',
+        billCallbackUrl:
+          'https://lancar-my-v2.vercel.app/api/verify-payment'
+      });
+
+      try {
+        const resp = await fetch('https://toyyibpay.com/index.php/api/createBill', {
+          method: 'POST',
+          body: form
+        });
+        if (!resp.ok) throw new Error('Network response was not OK');
+        const [ result ] = await resp.json();
+        console.log('BillCode:', result.BillCode);
+        window.location.href = `https://toyyibpay.com/${result.BillCode}`;
+      } catch (err) {
+        console.error('goToCheckout error:', err);
+        alert('Gagal hubungi ToyyibPay. Sila cuba lagi.');
+      }
+    }
+  </script>
 </body>
 </html>
