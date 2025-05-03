@@ -18,22 +18,30 @@
 
   <script>
     console.log('Homepage script loaded');
+
     document.addEventListener('DOMContentLoaded', () => {
-      document
-        .getElementById('daftar-btn')
-        .addEventListener('click', async () => {
-          console.log('Daftar clicked, creating bill…');
-          try {
-            const resp = await fetch('/api/create-bill', { method: 'POST' });
-            if (!resp.ok) throw new Error(await resp.text());
-            const { billCode } = await resp.json();
-            console.log('Got billCode:', billCode);
-            window.location.href = `https://toyyibpay.com/${billCode}`;
-          } catch (err) {
-            console.error('Error:', err);
-            alert('Gagal hubungi ToyyibPay. Sila cuba lagi.');
+      const btn = document.getElementById('daftar-btn');
+      if (!btn) {
+        console.error('Butang #daftar-btn tidak ditemui');
+        return;
+      }
+      btn.addEventListener('click', async () => {
+        console.log('Daftar button clicked');
+        try {
+          const resp = await fetch('/api/create-bill', { method: 'POST' });
+          if (!resp.ok) {
+            // Apabila status ≠200, baca teks dari response untuk debug
+            const errText = await resp.text();
+            throw new Error(errText || resp.statusText);
           }
-        });
+          const { billCode } = await resp.json();
+          console.log('Got billCode:', billCode);
+          window.location.href = `https://toyyibpay.com/${billCode}`;
+        } catch (err) {
+          console.error('create-bill failed:', err);
+          alert('Error create-bill: ' + err.message);
+        }
+      });
     });
   </script>
 </body>
