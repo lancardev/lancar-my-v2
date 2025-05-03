@@ -1,44 +1,72 @@
-// app.js (homepage)
-async function goToCheckout() {
-    // Setup data untuk call ToyyibPay API
-    const form = new URLSearchParams({
-      userSecretKey: 'kyyn0vbn-0ud7-z423-nafu-fro9p9o49cvw',
-      categoryCode:   'mi2pe6lg',
-      billName:       'Langganan Lancar.my',
-      billDescription:'Akses penuh Lancar.my selama 1 bulan',
-      billPriceSetting: '1',
-      billAmount:      '100',            // RM1.00 → 100 sen
-      billPayorInfo:   '1',              // collect email at ToyyibPay
-      billReturnUrl:   
-        'https://lancar-my-v2.vercel.app/dashboard.html?email={CUSTOMER_EMAIL}',
-      billCallbackUrl:
-        'https://lancar-my-v2.vercel.app/api/verify-payment'
-    });
-  
-    // Panggil API CreateBill
-    const resp = await fetch('https://toyyibpay.com/index.php/api/createBill', {
-      method: 'POST',
-      body: form
-    });
-  
-    if (!resp.ok) {
-      return alert('Gagal hubungi ToyyibPay. Sila cuba lagi.');
-    }
-  
-    const [ result ] = await resp.json();
-    const billCode = result.BillCode;
-  
-    // Redirect ke halaman pembayaran ToyyibPay
-    window.location.href = `https://toyyibpay.com/${billCode}`;
+// app.js
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+// Gantikan dengan nilai anda
+const SUPABASE_URL     = 'https://bpxmqwgxjzphbavaikhq.supabase.co';
+const SUPABASE_ANON_KEY= 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function initDashboard() {
+  const params   = new URLSearchParams(window.location.search);
+  const email    = params.get('email');
+  const welcomeE = document.getElementById('welcome');
+
+  if (!email) {
+    welcomeE.innerText = 'Tiada email ditemukan. Sila daftar semula.';
+    return;
   }
-  
-  // Tunggu DOM siap, kemudian pasang listener
-  document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('daftar-btn');
-    if (!btn) {
-      console.error("Butang #daftar-btn tidak ditemui dalam index.html");
-      return;
+
+  // 1) Upsert user
+  const { error: userErr } = await supabase
+    .from('users')
+    .upsert({ email });
+  if (userErr) {
+    welcomeE.innerText = 'Gagal daftar: ' + userErr.message;
+    console.error(userErr);
+    return;
+  }
+
+  // 2) Dapatkan/Generate referral_code
+  let { data: users, error: fetchErr } = await supabase
+    .from('users')
+    .select('referral_code')
+    .eq('email', email)
+    .single();
+  if (fetchErr) { console.error(fetchErr); }
+
+  let code = users?.referral_code;
+  if (!code) {
+    code = Math.random().toString(36).substring(2,8).toUpperCase();
+    const { error: updErr } = await supabase
+      .from('users')
+      .update({ referral_code: code })
+      .eq('email', email);
+    if (updErr) console.error(updErr);
+  }
+
+  // 3) Tunjuk ucapan selamat datang + code
+  welcomeE.innerHTML = `
+    Anda dilog masuk sebagai <strong>${email}</strong>.<br/>
+    <small>Kod referral anda: <strong>${code}</strong></small>
+  `;
+
+  // 4) Event click “LANCAR”
+  document.getElementById('create-btn').onclick = async () => {
+    const title = document.getElementById('project-title').value.trim();
+    const codeAI= document.getElementById('user-code').value.trim();
+    if (!title || !codeAI) {
+      return alert('Sila isi nama projek dan tampal kod AI.');
     }
-    btn.addEventListener('click', goToCheckout);
-  });
-  
+    const { error: projErr } = await supabase
+      .from('projects')
+      .insert([{ email, title, code: codeAI }]);
+    if (projErr) {
+      console.error(projErr);
+      alert('Gagal simpan projek: ' + projErr.message);
+    } else {
+      alert(`Terima kasih! Projek ${title}.lancar.my akan diproses.`);
+    }
+  };
+}
+
+initDashboard();
