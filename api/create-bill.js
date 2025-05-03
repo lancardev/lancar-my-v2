@@ -32,7 +32,7 @@ export default async function handler(req, res) {
       });
   
       const resp = await fetch(
-        'https://toyyibpay.com/index.php/api/createBill',
+        'https://dev.toyyibpay.com/index.php/api/createBill',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
