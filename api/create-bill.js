@@ -7,27 +7,31 @@ export default async function handler(req, res) {
     }
   
     try {
+      // Build x-www-form-urlencoded body
       const form = new URLSearchParams({
-        userSecretKey:  process.env.TOYYIBPAY_SECRET,
-        categoryCode:    process.env.TOYYIBPAY_CATEGORY,
-        billName:        'Langganan Lancar.my',
-        billDescription: 'Akses penuh Lancar.my selama 1 bulan',
-        billPriceSetting:'1',
-        billAmount:      '100',           // RM1.00 → 100 sen
-        billPayorInfo:   '2',             // 2 = hanya e-mel
-        billEmail:       '{CUSTOMER_EMAIL}',
-  
-        billReturnUrl:
+        userSecretKey:   process.env.TOYYIBPAY_SECRET,
+        categoryCode:     process.env.TOYYIBPAY_CATEGORY,
+        billName:         'Langganan Lancar.my',
+        billDescription:  'Akses penuh Lancar.my selama 1 bulan',
+        billPriceSetting: '1',    // fixed amount
+        billAmount:       '100',  // RM1.00 → 100 sen
+        billPayorInfo:    '1',    // 1 = require payer info
+        billTo:           '{CUSTOMER_EMAIL}',           // placeholder nama
+        billEmail:        '{CUSTOMER_EMAIL}',           // placeholder e-mel
+        billReturnUrl: 
           'https://lancar-my-v2.vercel.app/dashboard.html?email={CUSTOMER_EMAIL}',
         billCallbackUrl:
           'https://lancar-my-v2.vercel.app/api/verify-payment'
       });
   
+      // Call ToyyibPay createBill API
       const resp = await fetch(
         'https://toyyibpay.com/index.php/api/createBill',
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
           body: form
         }
       );
