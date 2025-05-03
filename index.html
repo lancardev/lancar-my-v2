@@ -14,40 +14,53 @@
       Masukkan e-mel anda, daftar, dan teruskan ke pembayaran.
     </p>
 
-    <!-- Input untuk e-m pelanggan -->
     <input
       type="email"
       id="checkout-email"
       placeholder="Masukkan e-mel anda"
       style="padding:0.5rem; width:250px; margin-bottom:1rem;"
     />
-
-    <!-- Button DAFTAR SEKARANG -->
     <button id="daftar-btn" class="btn-primary">DAFTAR SEKARANG</button>
+
+    <!-- Tempat untuk papar error, pilihan -->
+    <div id="error-msg" style="color:red; margin-top:1rem;"></div>
   </header>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const emailInput = document.getElementById('checkout-email');
-      const btn = document.getElementById('daftar-btn');
+      const btn        = document.getElementById('daftar-btn');
+      const errEl      = document.getElementById('error-msg');
 
       btn.addEventListener('click', async () => {
+        errEl.innerText = '';  // clear previous error
         const email = emailInput.value.trim();
         if (!email) {
-          return alert('Sila masukkan e-mel anda terlebih dahulu.');
+          return errEl.innerText = 'Sila masukkan e-mel anda.';
         }
+
         try {
           const resp = await fetch('/api/create-bill', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email })
           });
-          const body = await resp.json();
-          if (!resp.ok) throw new Error(body.error || resp.statusText);
-          // Redirect ke ToyyibPay checkout
-          window.location.href = `https://toyyibpay.com/${body.billCode}`;
+
+          // 1) Jika bukan 200, baca teks dan throw
+          if (!resp.ok) {
+            const text = await resp.text();
+            throw new Error(text || `Status ${resp.status}`);
+          }
+
+          // 2) Jika 200, parse JSON
+          const { billCode } = await resp.json();
+          // 3) Redirect ke ToyyibPay
+          window.location.href = `https://toyyibpay.com/${billCode}`;
+
         } catch (err) {
           console.error('create-bill error:', err);
+          // Papar error di laman dan alert sekali (optional)
+          errEl.innerText = err.message;
           alert('Error create-bill: ' + err.message);
         }
       });
