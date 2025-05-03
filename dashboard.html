@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard – Lancar.my</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <main class="hero">
+    <h2>Dashboard Anda</h2>
+    <p id="welcome">Memuatkan …</p>
+
+    <div>
+      <label for="project-title">Nama Projek (untuk subdomain):</label><br/>
+      <input type="text" id="project-title" placeholder="contoh: krepikSedap"/>
+    </div>
+
+    <div>
+      <label for="user-code">Tampal Kod AI:</label><br/>
+      <textarea id="user-code" rows="6" cols="50"></textarea>
+    </div>
+
+    <button id="create-btn" class="btn-primary">LANCAR</button>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
