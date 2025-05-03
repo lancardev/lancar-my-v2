@@ -11,34 +11,43 @@
     <h1>Bina Laman Web Anda Tanpa Perlu Mengetik Kod</h1>
     <p>
       Lancar.my memudahkan anda mencipta hingga 111 laman pendaratan secara percuma.
-      Daftar sekarang dan teruskan ke pembayaran.
+      Masukkan e-mel anda, daftar, dan teruskan ke pembayaran.
     </p>
+
+    <!-- 1) Kotak input e-mel wajib diisi -->
+    <input
+      type="email"
+      id="checkout-email"
+      placeholder="Masukkan e-m-l anda"
+      style="padding:0.5rem; width:250px; margin-bottom:1rem;"
+    />
+
+    <!-- 2) Button panggil goToCheckout -->
     <button id="daftar-btn" class="btn-primary">DAFTAR SEKARANG</button>
   </header>
 
   <script>
-    console.log('Homepage script loaded');
-
     document.addEventListener('DOMContentLoaded', () => {
+      const emailInput = document.getElementById('checkout-email');
       const btn = document.getElementById('daftar-btn');
-      if (!btn) {
-        console.error('Butang #daftar-btn tidak ditemui');
-        return;
-      }
+
       btn.addEventListener('click', async () => {
-        console.log('Daftar button clicked');
+        const email = emailInput.value.trim();
+        if (!email) {
+          return alert('Sila masukkan e-m-l anda terlebih dahulu.');
+        }
         try {
-          const resp = await fetch('/api/create-bill', { method: 'POST' });
-          if (!resp.ok) {
-            // Apabila status ≠200, baca teks dari response untuk debug
-            const errText = await resp.text();
-            throw new Error(errText || resp.statusText);
-          }
-          const { billCode } = await resp.json();
-          console.log('Got billCode:', billCode);
-          window.location.href = `https://toyyibpay.com/${billCode}`;
+          const resp = await fetch('/api/create-bill', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+          const body = await resp.json();
+          if (!resp.ok) throw new Error(body.error || resp.statusText);
+          // Redirect ke ToyyibPay checkout
+          window.location.href = `https://toyyibpay.com/${body.billCode}`;
         } catch (err) {
-          console.error('create-bill failed:', err);
+          console.error('create-bill error:', err);
           alert('Error create-bill: ' + err.message);
         }
       });
