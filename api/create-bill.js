@@ -15,15 +15,15 @@ export default async function handler(req, res) {
         billDescription: 'Akses penuh Lancar.my selama 1 bulan',
         billPriceSetting:'1',
         billAmount:      '100',
-        billPayorInfo:   '1',                    // collect email
-        billTo:          '{CUSTOMER_EMAIL}',     // placeholder supaya ToyyibPay replace dengan email sebenar
-        billReturnUrl:   
+        billPayorInfo:   '1',                    // collect payor info
+        billTo:          '{CUSTOMER_EMAIL}',     // ganti dengan email payor
+        billEmail:       '{CUSTOMER_EMAIL}',     // perlu diisi juga
+        billReturnUrl:
           'https://lancar-my-v2.vercel.app/dashboard.html?email={CUSTOMER_EMAIL}',
-        billCallbackUrl: 
+        billCallbackUrl:
           'https://lancar-my-v2.vercel.app/api/verify-payment'
       });
   
-      // Panggil ToyyibPay API
       const resp = await fetch(
         'https://toyyibpay.com/index.php/api/createBill',
         {
