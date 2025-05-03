@@ -13,14 +13,23 @@
       Lancar.my memudahkan anda mencipta hingga 111 laman pendaratan secara percuma.
       Daftar sekarang, tampal kod AI yang kami sediakan, dan selesai—website anda terus hidup!
     </p>
-    <!-- GANTI URL di bawah dengan link ToyyibPay checkout anda -->
-    <a
-      href="https://toyyibpay.com/Langganan-Lancar-my"
-      class="btn-primary"
+
+    <!-- Input untuk pelanggan masukkan e-mel sebelum checkout -->
+    <input
+      type="email"
+      id="checkout-email"
+      placeholder="Masukkan e-mel anda"
+      style="padding:0.5rem; width:240px; margin-bottom:1rem;"
+    />
+
+    <!-- Button panggil goToCheckout() -->
+    <button
       id="daftar-btn"
-    >DAFTAR SEKARANG</a>
+      class="btn-primary"
+    >DAFTAR SEKARANG</button>
   </header>
 
-  <script src="app.js"></script>
+  <!-- Kita jadikan module supaya boleh import/export -->
+  <script type="module" src="app.js"></script>
 </body>
 </html>
