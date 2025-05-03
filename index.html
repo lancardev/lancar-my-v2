@@ -14,15 +14,15 @@
       Masukkan e-mel anda, daftar, dan teruskan ke pembayaran.
     </p>
 
-    <!-- 1) Kotak input e-mel wajib diisi -->
+    <!-- Input untuk e-m pelanggan -->
     <input
       type="email"
       id="checkout-email"
-      placeholder="Masukkan e-m-l anda"
+      placeholder="Masukkan e-mel anda"
       style="padding:0.5rem; width:250px; margin-bottom:1rem;"
     />
 
-    <!-- 2) Button panggil goToCheckout -->
+    <!-- Button DAFTAR SEKARANG -->
     <button id="daftar-btn" class="btn-primary">DAFTAR SEKARANG</button>
   </header>
 
@@ -34,7 +34,7 @@
       btn.addEventListener('click', async () => {
         const email = emailInput.value.trim();
         if (!email) {
-          return alert('Sila masukkan e-m-l anda terlebih dahulu.');
+          return alert('Sila masukkan e-mel anda terlebih dahulu.');
         }
         try {
           const resp = await fetch('/api/create-bill', {
