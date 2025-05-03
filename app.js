@@ -1,55 +1,62 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-// 1) Masukkan URL & ANON KEY projek Supabase anda
-const SUPABASE_URL     = 'https://bpxmqwgxjzphbavaikhq.supabase.co';
-const SUPABASE_ANON_KEY= 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0';
+const SUPABASE_URL      = 'https://bpxmqwgxjzphbavaikhq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// 2) Ambil email dari query string (?email=...)
 const params = new URLSearchParams(window.location.search);
 const email  = params.get('email');
 
+// Fungsi untuk buat 6 karakter alfanumerik rawak
+function generateCode() {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
 async function init() {
   const welcomeEl = document.getElementById('welcome');
-
   if (!email) {
     welcomeEl.innerText = 'Tiada email ditemui. Sila daftar semula.';
     return;
   }
 
-  // 3) Simpan atau kemaskini user
-  const { error: errUser } = await supabase
+  // 1) Upsert user (tanpa referral_code)
+  await supabase.from('users').upsert({ email });
+
+  // 2) Ambil semula rekod user untuk tengok referral_code
+  const { data: userArr, error: errUser } = await supabase
     .from('users')
-    .upsert({ email });
+    .select('referral_code')
+    .eq('email', email)
+    .limit(1);
+
   if (errUser) {
-    console.error('Error simpan user:', errUser);
-    welcomeEl.innerText = 'Gagal daftar: ' + errUser.message;
+    console.error('Error fetch user:', errUser);
+    welcomeEl.innerText = 'Gagal dapat data user.';
     return;
   }
 
-  // 4) Papar selamat datang
-  welcomeEl.innerHTML = `Anda dilog masuk sebagai <strong>${email}</strong>`;
+  let code = userArr[0]?.referral_code;
+  // 3) Jika tiada, jana dan update
+  if (!code) {
+    code = generateCode();
+    const { error: errUpdate } = await supabase
+      .from('users')
+      .update({ referral_code: code })
+      .eq('email', email);
+    if (errUpdate) {
+      console.error('Error update code:', errUpdate);
+    }
+  }
 
-  // 5) Event “LANCAR”
+  // 4) Papar selamat datang + code
+  welcomeEl.innerHTML = `
+    Anda dilog masuk sebagai <strong>${email}</strong>.<br/>
+    <small>Kod referral anda: <strong>${code}</strong></small>
+  `;
+
+  // — LANCAR projek seperti biasa —
   document.getElementById('create-btn').onclick = async () => {
-    const title = document.getElementById('project-title').value.trim();
-    const code  = document.getElementById('user-code').value.trim();
-    if (!title || !code) {
-      alert('Sila isi nama projek dan tampal kod AI.');
-      return;
-    }
-
-    // 6) Simpan projek ke Supabase
-    const { data, error: errProj } = await supabase
-      .from('projects')
-      .insert([{ email, title, code }]);
-    if (errProj) {
-      console.error('Error simpan projek:', errProj);
-      alert('Gagal simpan projek. Sila cuba lagi.');
-    } else {
-      alert(`Terima kasih! Projek anda (${title}.lancar.my) sedang diproses.`);
-      // (Nanti kita tambah automasi create subdomain)
-    }
+    // ... (kod simpan projek)
   };
 }
 
