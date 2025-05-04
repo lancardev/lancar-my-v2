@@ -25,14 +25,13 @@ export default async function handler(req, res) {
         billDescription: 'Akses penuh Lancar.my selama 1 bulan',
         billPriceSetting:'1',
         billAmount:      '100',
-        billPayorInfo:   '1',
+        billPayorInfo:   '2',    // << changed from '1' to '2'
         billTo:          email,
         billEmail:       email,
         billReturnUrl:   `${BASE_URL}/dashboard.html?email=${encodeURIComponent(email)}`,
         billCallbackUrl: `${BASE_URL}/api/verify-payment`
       });
   
-      // **Gunakan endpoint DEV ToyyibPay**
       const resp = await fetch(
         'https://dev.toyyibpay.com/index.php/api/createBill',
         {
