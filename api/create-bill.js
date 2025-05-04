@@ -8,7 +8,6 @@ export default async function handler(req, res) {
   
     try {
       const { email } = req.body;
-      // Validasi ringkas format e-mel
       if (
         typeof email !== 'string' ||
         !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -16,19 +15,20 @@ export default async function handler(req, res) {
         throw new Error('Format e-mel tidak sah');
       }
   
-      // Build x-www-form-urlencoded body tanpa payor info
       const form = new URLSearchParams({
         userSecretKey:   process.env.TOYYIBPAY_SECRET,
         categoryCode:    process.env.TOYYIBPAY_CATEGORY,
         billName:        'Langganan Lancar.my',
         billDescription: 'Akses penuh Lancar.my selama 1 bulan',
         billPriceSetting:'1',
-        billAmount:      '100',  // RM1.00 → 100 sen
-        billPayorInfo:   '0',    // 0 = tak minta apa-apa info payor
+        billAmount:      '100',
+        billPayorInfo:   '1',
+        billTo:          email,
+        billEmail:       email,
         billReturnUrl:
-          `https://lancar-my-v2.vercel.app/dashboard.html?email=${encodeURIComponent(email)}`,
+          `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard.html?email=${encodeURIComponent(email)}`,
         billCallbackUrl:
-          'https://lancar-my-v2.vercel.app/api/verify-payment'
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/verify-payment`
       });
   
       const resp = await fetch(
@@ -40,7 +40,7 @@ export default async function handler(req, res) {
         }
       );
       if (!resp.ok) {
-        throw new Error(`ToyyibPay API returned status ${resp.status}`);
+        throw new Error(`ToyyibPay API returned ${resp.status}`);
       }
   
       const json = await resp.json();
@@ -48,7 +48,7 @@ export default async function handler(req, res) {
         ? json[0]?.BillCode
         : json.BillCode;
       if (!billCode) {
-        throw new Error(json.error || `Unexpected response: ${JSON.stringify(json)}`);
+        throw new Error(json.error || 'Tiada BillCode dalam response');
       }
   
       return res.status(200).json({ billCode });
