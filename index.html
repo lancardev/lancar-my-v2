@@ -1,69 +1,66 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Lancar.my – Buat Laman Tanpa Kod</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
   <header class="hero">
     <h1>Bina Laman Web Anda Tanpa Perlu Mengetik Kod</h1>
     <p>
       Lancar.my memudahkan anda mencipta hingga 111 laman pendaratan secara percuma.
-      Masukkan e-mel anda, daftar, dan teruskan ke pembayaran.
+      Anda boleh daftar & bayar, atau terus login dengan Magic-Link.
     </p>
-
-    <input
-      type="email"
-      id="checkout-email"
-      placeholder="Masukkan e-mel anda"
-      style="padding:0.5rem; width:250px; margin-bottom:1rem;"
-    />
-    <button id="daftar-btn" class="btn-primary">DAFTAR SEKARANG</button>
-
-    <!-- Tempat untuk papar error, pilihan -->
-    <div id="error-msg" style="color:red; margin-top:1rem;"></div>
+    <!-- CTA container -->
+    <div id="cta"></div>
   </header>
 
   <script>
+    // Fungsi checkout (panggil serverless, kemudian redirect ke ToyyibPay)
+    async function goToCheckout() {
+      try {
+        const resp = await fetch('/api/create-bill', { method: 'POST' });
+        if (!resp.ok) {
+          const txt = await resp.text();
+          throw new Error(txt || resp.statusText);
+        }
+        const { billCode } = await resp.json();
+        // Tukar kepada dev.toyyibpay.com jika anda ujian di dev
+        window.location.href = `https://toyyibpay.com/${billCode}`;
+      } catch (err) {
+        console.error('checkout error:', err);
+        alert('Gagal sambung ke ToyyibPay:\n' + err.message);
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
-      const emailInput = document.getElementById('checkout-email');
-      const btn        = document.getElementById('daftar-btn');
-      const errEl      = document.getElementById('error-msg');
+      const saved = localStorage.getItem('lancarEmail');
+      const cta   = document.getElementById('cta');
 
-      btn.addEventListener('click', async () => {
-        errEl.innerText = '';  // clear previous error
-        const email = emailInput.value.trim();
-        if (!email) {
-          return errEl.innerText = 'Sila masukkan e-mel anda.';
-        }
-
-        try {
-          const resp = await fetch('/api/create-bill', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
-          });
-
-          // 1) Jika bukan 200, baca teks dan throw
-          if (!resp.ok) {
-            const text = await resp.text();
-            throw new Error(text || `Status ${resp.status}`);
-          }
-
-          // 2) Jika 200, parse JSON
-          const { billCode } = await resp.json();
-          // 3) Redirect ke ToyyibPay
-          window.location.href = `https://dev.toyyibpay.com/${billCode}`;
-
-        } catch (err) {
-          console.error('create-bill error:', err);
-          // Papar error di laman dan alert sekali (optional)
-          errEl.innerText = err.message;
-          alert('Error create-bill: ' + err.message);
-        }
-      });
+      if (saved) {
+        // Jika email tersimpan, terus ke dashboard
+        cta.innerHTML = `
+          <a href="/dashboard.html?email=${encodeURIComponent(saved)}"
+             class="btn-primary"
+          >MASUK KE DASHBOARD</a>
+        `;
+      } else {
+        // Baru: tunjuk dua pilihan
+        cta.innerHTML = `
+          <button id="daftar-btn" class="btn-primary">
+            DAFTAR SEKARANG
+          </button>
+          <a href="/login.html"
+             class="btn-secondary"
+             style="margin-left:1rem;"
+          >DAFTAR / LOGIN (Magic-Link)</a>
+        `;
+        document
+          .getElementById('daftar-btn')
+          .addEventListener('click', goToCheckout);
+      }
     });
   </script>
 </body>
