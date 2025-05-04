@@ -1,3 +1,5 @@
+// api/create-bill.js
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
       res.setHeader('Allow', ['POST']);
@@ -16,15 +18,16 @@ export default async function handler(req, res) {
       const BASE_URL = process.env.BASE_URL || 'https://lancar-my-v2.vercel.app';
   
       const form = new URLSearchParams({
-        userSecretKey:   process.env.TOYYIBPAY_SECRET,
-        categoryCode:    process.env.TOYYIBPAY_CATEGORY,
-        billName:        'Langganan Lancar.my',
-        billDescription: 'Akses penuh Lancar.my selama 1 bulan',
-        billPriceSetting:'1',
-        billAmount:      '100',
-        billPayorInfo:   '0',
-        billReturnUrl:   `${BASE_URL}/dashboard.html?email=${encodeURIComponent(email)}`,
-        billCallbackUrl: `${BASE_URL}/api/verify-payment`
+        userSecretKey:    process.env.TOYYIBPAY_SECRET,
+        categoryCode:     process.env.TOYYIBPAY_CATEGORY,
+        billName:         'Langganan Lancar.my',
+        billDescription:  'Akses penuh Lancar.my selama 1 bulan',
+        billPriceSetting: '1',
+        billAmount:       '100',
+        billPayorInfo:    '0',
+        // ✅ Redirect ke dashboard.html, bukannya login.html
+        billReturnUrl:    `${BASE_URL}/dashboard.html?email=${encodeURIComponent(email)}`,
+        billCallbackUrl:  `${BASE_URL}/api/verify-payment`
       });
   
       const resp = await fetch(
@@ -52,6 +55,7 @@ export default async function handler(req, res) {
       if (!billCode) throw new Error('Tiada BillCode dalam response');
   
       return res.status(200).json({ billCode });
+  
     } catch (err) {
       console.error('create-bill error:', err);
       return res.status(400).json({ error: err.message });

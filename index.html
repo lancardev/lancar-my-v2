@@ -29,7 +29,7 @@
     import { createClient }
       from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    // — Ganti dengan credential Supabase anda —
+    // GANTI dengan credential Supabase anda:
     const SUPABASE_URL      = 'https://bpxmqwgxjzphbavaikhq.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0';
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -45,7 +45,7 @@
       btn.disabled = true;
       msg.textContent = 'Memproses…';
 
-      // 1) Semak di Supabase.users
+      // 1) Semak sama ada email sudah ada
       const { data: user, error: errUser } = await supabase
         .from('users')
         .select('email')
@@ -61,7 +61,7 @@
       }
 
       if (!user) {
-        // ─── Belum bayar → buat checkout ───
+        // ─── Belum bayar → checkout ───
         try {
           const resp = await fetch('/api/create-bill', {
             method: 'POST',
@@ -73,7 +73,7 @@
             throw new Error(text || resp.statusText);
           }
           const { billCode } = await resp.json();
-          // redirect ke dev ToyyibPay
+          // Redirect ke ToyyibPay DEV
           window.location.href = `https://dev.toyyibpay.com/${billCode}`;
         } catch (err) {
           console.error('checkout error:', err);
@@ -82,7 +82,7 @@
           msg.textContent = '';
         }
       } else {
-        // ─── Sudah bayar → hantar Magic-Link ───
+        // ─── Sudah bayar → magic-link ───
         const { error: errOtp } = await supabase.auth.signInWithOtp({
           email,
           options: {
