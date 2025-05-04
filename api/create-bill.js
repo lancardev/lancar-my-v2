@@ -15,8 +15,8 @@ export default async function handler(req, res) {
         throw new Error('Format e-mel tidak sah');
       }
   
-      // Ambil BASE_URL dari env, fallback jika belum setting
-      const BASE_URL = process.env.BASE_URL || 'https://lancar-my-v2.vercel.app';
+      const BASE_URL = process.env.BASE_URL
+        || 'https://lancar-my-v2.vercel.app';
   
       const form = new URLSearchParams({
         userSecretKey:   process.env.TOYYIBPAY_SECRET,
@@ -24,14 +24,15 @@ export default async function handler(req, res) {
         billName:        'Langganan Lancar.my',
         billDescription: 'Akses penuh Lancar.my selama 1 bulan',
         billPriceSetting:'1',
-        billAmount:      '100',             // RM1.00 → 100 sen
-        billPayorInfo:   '1',               // minta e-mel
+        billAmount:      '100',
+        billPayorInfo:   '1',
         billTo:          email,
         billEmail:       email,
         billReturnUrl:   `${BASE_URL}/dashboard.html?email=${encodeURIComponent(email)}`,
         billCallbackUrl: `${BASE_URL}/api/verify-payment`
       });
   
+      // **PRODUCTION endpoint** ToyyibPay:
       const resp = await fetch(
         'https://dev.toyyibpay.com/index.php/api/createBill',
         {
@@ -40,11 +41,15 @@ export default async function handler(req, res) {
           body: form
         }
       );
+  
       if (!resp.ok) {
         throw new Error(`ToyyibPay API returned status ${resp.status}`);
       }
   
       const json = await resp.json();
+      console.log('ToyyibPay response:', json);
+  
+      // Ekstrak BillCode
       const billCode = Array.isArray(json)
         ? json[0]?.BillCode
         : json.BillCode;
