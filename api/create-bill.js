@@ -32,7 +32,7 @@ export default async function handler(req, res) {
         billCallbackUrl: `${BASE_URL}/api/verify-payment`
       });
   
-      // **PRODUCTION endpoint** ToyyibPay:
+      // **Gunakan endpoint DEV ToyyibPay**
       const resp = await fetch(
         'https://dev.toyyibpay.com/index.php/api/createBill',
         {
@@ -42,23 +42,27 @@ export default async function handler(req, res) {
         }
       );
   
-      if (!resp.ok) {
-        throw new Error(`ToyyibPay API returned status ${resp.status}`);
+      const text = await resp.text();
+      let json;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        throw new Error(`Unexpected response: ${text}`);
       }
   
-      const json = await resp.json();
-      console.log('ToyyibPay response:', json);
+      if (json.status === 'error' || json.error) {
+        const msg = json.msg || json.error || JSON.stringify(json);
+        throw new Error(msg);
+      }
   
-      // Ekstrak BillCode
       const billCode = Array.isArray(json)
         ? json[0]?.BillCode
         : json.BillCode;
       if (!billCode) {
-        throw new Error(json.error || 'Tiada BillCode dalam response');
+        throw new Error('Tiada BillCode dalam response');
       }
   
       return res.status(200).json({ billCode });
-  
     } catch (err) {
       console.error('create-bill error:', err);
       return res.status(400).json({ error: err.message });
