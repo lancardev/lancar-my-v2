@@ -3,102 +3,94 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Lancar.my – Daftar / Login</title>
+  <title>Lancar.my – Daftar & Login</title>
   <link rel="stylesheet" href="styles.css"/>
+  <style>
+    .auth-form { display: flex; flex-direction: column; align-items: center; gap: .5rem; }
+    .auth-form input { padding: .5rem; width: 280px; }
+    .auth-form button { padding: .5rem 1rem; width: 150px; }
+    .btn-group { display: flex; gap: 1rem; }
+  </style>
 </head>
 <body>
   <header class="hero">
     <h1>Bina Laman Web Anda Tanpa Perlu Mengetik Kod</h1>
-    <p>
-      Masukkan e-mel anda.  
-      Jika belum bayar → terus ke pembayaran ToyyibPay.  
-      Jika sudah bayar → kami hantar Magic-Link untuk login.
-    </p>
-
-    <input
-      type="email"
-      id="email-input"
-      placeholder="Masukkan e-mel anda"
-      style="padding:0.5rem; width:250px; margin-bottom:1rem;"
-    />
-    <button id="action-btn" class="btn-primary">DAFTAR / LOGIN</button>
-    <p id="status-msg" style="color:green; margin-top:1rem;"></p>
+    <p>Masukkan e-mel dan kata laluan anda, kemudian pilih “Daftar” atau “Login”.</p>
+    <div class="auth-form">
+      <input type="email" id="email" placeholder="Email anda"/>
+      <input type="password" id="password" placeholder="Kata Laluan"/>
+      <div class="btn-group">
+        <button id="register-btn">Daftar</button>
+        <button id="login-btn">Login</button>
+      </div>
+      <p id="status" style="color:red;"></p>
+    </div>
   </header>
 
   <script type="module">
-    import { createClient }
-      from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    // GANTI dengan credential Supabase anda:
+    // GANTI dengan nilai Supabase anda
     const SUPABASE_URL      = 'https://bpxmqwgxjzphbavaikhq.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0';
+
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const emailIn  = document.getElementById('email');
+    const passIn   = document.getElementById('password');
+    const statusP  = document.getElementById('status');
+    const regBtn   = document.getElementById('register-btn');
+    const logBtn   = document.getElementById('login-btn');
 
-    const emailInput = document.getElementById('email-input');
-    const btn        = document.getElementById('action-btn');
-    const msg        = document.getElementById('status-msg');
-
-    btn.addEventListener('click', async () => {
-      const email = emailInput.value.trim();
-      if (!email) return alert('Sila masukkan e-mel anda.');
-
-      btn.disabled = true;
-      msg.textContent = 'Memproses…';
-
-      // 1) Semak sama ada email sudah ada
-      const { data: user, error: errUser } = await supabase
+    // REGISTER
+    regBtn.addEventListener('click', async () => {
+      statusP.textContent = '';
+      const email = emailIn.value.trim();
+      const pass  = passIn.value;
+      if (!email || !pass) {
+        return statusP.textContent = 'Sila lengkapkan email & password.';
+      }
+      // Cek dulu kalau email dah wujud
+      const { data:existing } = await supabase
         .from('users')
         .select('email')
         .eq('email', email)
         .single();
-
-      if (errUser && errUser.code !== 'PGRST116') {
-        console.error(errUser);
-        alert('Ralat semak data: ' + errUser.message);
-        btn.disabled = false;
-        msg.textContent = '';
-        return;
+      if (existing) {
+        return statusP.textContent = 'Email ini sudah daftar—gunakan Login.';
       }
-
-      if (!user) {
-        // ─── Belum bayar → checkout ───
-        try {
-          const resp = await fetch('/api/create-bill', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
-          });
-          if (!resp.ok) {
-            const text = await resp.text();
-            throw new Error(text || resp.statusText);
-          }
-          const { billCode } = await resp.json();
-          // Redirect ke ToyyibPay DEV
-          window.location.href = `https://dev.toyyibpay.com/${billCode}`;
-        } catch (err) {
-          console.error('checkout error:', err);
-          alert('Gagal sambung ke ToyyibPay:\n' + err.message);
-          btn.disabled = false;
-          msg.textContent = '';
-        }
+      // Buat signup di Supabase Auth
+      const { data, error } = await supabase.auth.signUp({
+        email, password: pass
+      });
+      if (error) {
+        statusP.textContent = 'Daftar gagal: ' + error.message;
       } else {
-        // ─── Sudah bayar → magic-link ───
-        const { error: errOtp } = await supabase.auth.signInWithOtp({
-          email,
-          options: {
-            emailRedirectTo:
-              `${window.location.origin}/dashboard.html`
-          }
-        });
-        if (errOtp) {
-          console.error(errOtp);
-          alert('Gagal hantar pautan login: ' + errOtp.message);
-          msg.textContent = '';
-          btn.disabled = false;
-        } else {
-          msg.textContent =
-            'Pautan Magic-Link telah dihantar! Semak e-mel anda.';
-        }
+        // Simpan juga ke jadual `users` (optional referral)
+        await supabase
+          .from('users')
+          .insert({ email })
+          .single();
+        statusP.style.color = 'green';
+        statusP.textContent = 'Berjaya daftar! Sila Login sekarang.';
+      }
+    });
+
+    // LOGIN
+    logBtn.addEventListener('click', async () => {
+      statusP.textContent = '';
+      const email = emailIn.value.trim();
+      const pass  = passIn.value;
+      if (!email || !pass) {
+        return statusP.textContent = 'Sila lengkapkan email & password.';
+      }
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email, password: pass
+      });
+      if (error) {
+        statusP.textContent = 'Login gagal: ' + error.message;
+      } else {
+        // Berjaya login → pergi ke Dashboard
+        window.location.href = 'dashboard.html';
       }
     });
   </script>
