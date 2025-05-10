@@ -2,37 +2,56 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login – Lancar.my</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Masuk ke Lancar.my</title>
   <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
   <main class="hero">
     <h2>Masuk ke Lancar.my</h2>
-    <p>Masukkan e-m-l anda untuk dapatkan pautan login.</p>
-    <input type="email" id="email" placeholder="contoh: anda@domain.com"/>
-    <button id="send-link" class="btn-primary">Hantar Pautan Login</button>
+    <p>Masukkan e-mel & kata laluan anda untuk akses dashboard.</p>
+    <input type="email" id="email" placeholder="you@domain.com"
+           style="padding:.5rem;width:250px;margin-right:1rem;"/>
+    <input type="password" id="password" placeholder="Kata laluan"
+           style="padding:.5rem;width:250px;margin-right:1rem;"/>
+    <button id="login-btn" class="btn-primary">Masuk</button>
+    <p id="msg" style="color:red;margin-top:1rem;"></p>
   </main>
 
   <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    import { createClient }
+      from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    const supabase = createClient(
-      'https://YOUR_PROJECT.supabase.co',
-      'YOUR_ANON_KEY'
-    );
+    const SUPABASE_URL      = 'https://<YOUR_PROJECT>.supabase.co';
+    const SUPABASE_ANON_KEY = '<YOUR_ANON_KEY>';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    document.getElementById('send-link').onclick = async () => {
-      const email = document.getElementById('email').value;
-      if (!email) return alert('Sila masukkan e-m-l anda.');
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: 'https://lancar-my-v2.vercel.app/dashboard.html'
-        }
+    const emailIn = document.getElementById('email');
+    const passIn  = document.getElementById('password');
+    const btn     = document.getElementById('login-btn');
+    const msgP    = document.getElementById('msg');
+
+    // Prefill email from query?
+    const params = new URLSearchParams(location.search);
+    if (params.get('email')) {
+      emailIn.value = params.get('email');
+    }
+
+    btn.onclick = async () => {
+      const email = emailIn.value.trim();
+      const pass  = passIn.value;
+      if (!email||!pass) {
+        return msgP.textContent = 'Sila lengkapkan e-mel & kata laluan.';
+      }
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email, password: pass
       });
-      if (error) alert('Gagal hantar pautan: ' + error.message);
-      else alert('Pautan login telah dihantar! Semak e-m-l anda.');
+      if (error) {
+        msgP.textContent = error.message;
+      } else {
+        // berjaya → dashboard
+        location.href = `dashboard.html`;
+      }
     };
   </script>
 </body>
