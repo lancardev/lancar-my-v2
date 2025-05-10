@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     const { email } = req.body;
     if (!email) throw new Error('Tiada email');
 
-    const BASE_URL = process.env.BASE_URL || 'https://lancar-my-v2.vercel.app';
+    const BASE_URL = process.env.BASE_URL;  // contoh: https://lancar-my-v2.vercel.app
 
     const form = new URLSearchParams({
       userSecretKey:   process.env.TOYYIBPAY_SECRET,
@@ -18,8 +18,7 @@ export default async function handler(req, res) {
       billPriceSetting:'1',
       billAmount:      '100',
       billPayorInfo:   '0',
-      // **Return terus ke dashboard**
-      billReturnUrl:   `${BASE_URL}/dashboard.html`,
+      billReturnUrl:   `${BASE_URL}/dashboard.html`,       // **terus ke dashboard**
       billCallbackUrl: `${BASE_URL}/api/verify-payment`
     });
 
@@ -32,9 +31,6 @@ export default async function handler(req, res) {
     try { json = JSON.parse(text); }
     catch { throw new Error(`Unexpected response: ${text}`); }
 
-    if (json.status==='error' || json.error) {
-      throw new Error(json.msg||json.error||JSON.stringify(json));
-    }
     const billCode = Array.isArray(json)? json[0]?.BillCode : json.BillCode;
     if (!billCode) throw new Error('Tiada BillCode dalam response');
 

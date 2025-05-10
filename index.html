@@ -35,7 +35,7 @@
     import { createClient } 
       from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    // GANTI dengan nilai Supabase anda:
+    // Ganti dengan nilai Supabase anda:
     const SUPABASE_URL      = 'https://bpxmqwgxjzphbavaikhq.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0';
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -50,22 +50,36 @@
       return Math.random().toString(36).substr(2,6).toUpperCase();
     }
 
-    // DAFTAR → signup + simpan referral_code + payment
+    // DAFTAR → signup + signIn + simpan referral_code + payment
     regBtn.onclick = async () => {
       statusP.style.color = 'red'; statusP.textContent = '';
       const email = emailIn.value.trim(), pass = passIn.value;
       if (!email || !pass) return statusP.textContent = 'Sila lengkapkan kedua-dua medan.';
+
       // 1) Cek duplicate
-      const { data: ex } = await supabase.from('users').select('email').eq('email', email).maybeSingle();
+      let { data: ex } = await supabase
+        .from('users')
+        .select('email')
+        .eq('email', email)
+        .maybeSingle();
       if (ex) return statusP.textContent = 'Email sudah daftar, sila Login.';
+
       // 2) Signup Auth
       const { error: e1 } = await supabase.auth.signUp({ email, password: pass });
       if (e1) return statusP.textContent = 'Daftar gagal: ' + e1.message;
-      // 3) Simpan referral_code
+
+      // 3) **Sign-in semula** untuk simpan session
+      const { error: e1b } = await supabase.auth.signInWithPassword({ email, password: pass });
+      if (e1b) return statusP.textContent = 'Gagal simpan sesi: ' + e1b.message;
+
+      // 4) Simpan referral_code
       const ref = makeReferral();
-      const { error: e2 } = await supabase.from('users').insert({ email, referral_code: ref });
+      const { error: e2 } = await supabase
+        .from('users')
+        .insert({ email, referral_code: ref });
       if (e2) return statusP.textContent = 'Gagal simpan user: ' + e2.message;
-      // 4) Panggil API create-bill
+
+      // 5) Panggil API create-bill
       statusP.style.color = 'black'; statusP.textContent = 'Sediakan pembayaran…';
       try {
         const resp = await fetch('/api/create-bill', {
@@ -75,7 +89,7 @@
         });
         const j = await resp.json();
         if (!j.billCode) throw new Error(j.error||'Tiada BillCode');
-        // 5) Redirect terus ke ToyyibPay checkout
+        // 6) Redirect terus ke ToyyibPay checkout
         window.location.href = `https://dev.toyyibpay.com/${j.billCode}`;
       } catch(err) {
         statusP.textContent = 'Ralat: ' + err.message;
