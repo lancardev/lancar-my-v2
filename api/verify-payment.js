@@ -1,45 +1,56 @@
 // api/verify-payment.js
-import { createClient } from '@supabase/supabase-js';
-import sgMail from '@sendgrid/mail';
+const { createClient } = require('@supabase/supabase-js');
+const sgMail = require('@sendgrid/mail');
 
+// Set SendGrid API key dari env var
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
+// Client admin Supabase (Service Role Key)
 const supaAdmin = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY,
   { auth: { persistSession: false } }
 );
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).end();
+module.exports = async (req, res) => {
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', ['POST']);
+    return res.status(405).end(`Method ${req.method} not allowed`);
+  }
+
   try {
-    const payload = req.body; 
-    // ToyyibPay akan POST JSON, cari email dan status
-    const email = payload.billEmail || payload.email;
-    const status = payload.status_id || payload.status;
+    const { billEmail, status_id } = req.body;
+    const email = billEmail || req.body.email;
+    const status = status_id || req.body.status;
+
+    // Hanya proceed jika status_id = 1 (approved)
     if (status != 1) {
-      return res.status(200).json({ ok: false, msg: 'Not paid' });
+      return res.status(200).json({ ok: false, msg: 'Payment not approved' });
     }
-    // Generate password random 8 chars
+
+    // 1) Generate random 8-char password
     const password = Math.random().toString(36).slice(-8);
-    // Create user via Admin API
+
+    // 2) Create Supabase user via Admin API
     const { error: errUser } = await supaAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true
     });
     if (errUser) throw errUser;
-    // Send password via SendGrid
+
+    // 3) Kirim e-mel kepada user dengan SendGrid
     const msg = {
       to: email,
-      from: process.env.SENDER_EMAIL,
-      subject: 'Password Lancar.my Anda',
-      text: `Terima kasih kerana mendaftar. Kata laluan anda untuk login:\n\n${password}\n\nSila simpan untuk kegunaan akan datang.`,
+      from: process.env.SENDER_EMAIL,       // perlu set di Vercel
+      subject: 'Kata Laluan Lancar.my Anda',
+      text: `Terima kasih kerana mendaftar!\n\nKata laluan anda adalah:\n\n${password}\n\nSila simpan untuk login kemudian.`,
     };
     await sgMail.send(msg);
+
     return res.status(200).json({ ok: true });
   } catch (err) {
     console.error('verify-payment error:', err);
     return res.status(500).json({ error: err.message });
   }
-}
+};

@@ -2,97 +2,125 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Lancar.my – Daftar & Login</title>
   <link rel="stylesheet" href="styles.css"/>
   <style>
-    .auth-form { display: flex; flex-direction: column; align-items: center; gap: .5rem; }
-    .auth-form input { padding: .5rem; width: 280px; }
-    .auth-form button { padding: .5rem 1rem; width: 150px; }
-    .btn-group { display: flex; gap: 1rem; }
+    .auth-form { display:flex; flex-direction:column; align-items:center; gap:.5rem; }
+    .auth-form input { padding:.5rem; width:280px; }
+    .btn-group { display:flex; gap:1rem; margin-top:.5rem; }
+    .btn { padding:.5rem 1rem; border:none; border-radius:4px; cursor:pointer; }
+    .btn-register { background:#28a745; color:#fff; }
+    .btn-login    { background:#0070f3; color:#fff; }
+    #status { height:1.2rem; color:red; }
   </style>
 </head>
 <body>
   <header class="hero">
     <h1>Bina Laman Web Anda Tanpa Perlu Mengetik Kod</h1>
-    <p>Masukkan e-mel dan kata laluan anda, kemudian pilih “Daftar” atau “Login”.</p>
+    <p>Daftar untuk terus ke pembayaran, atau Login jika sudah daftar.</p>
     <div class="auth-form">
       <input type="email" id="email" placeholder="Email anda"/>
       <input type="password" id="password" placeholder="Kata Laluan"/>
       <div class="btn-group">
-        <button id="register-btn">Daftar</button>
-        <button id="login-btn">Login</button>
+        <button id="register-btn" class="btn btn-register">Daftar</button>
+        <button id="login-btn"    class="btn btn-login">Login</button>
       </div>
-      <p id="status" style="color:red;"></p>
+      <p id="status"></p>
     </div>
   </header>
 
   <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    import { createClient } 
+      from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    // GANTI dengan nilai Supabase anda
+    // Ganti dengan milik anda:
     const SUPABASE_URL      = 'https://bpxmqwgxjzphbavaikhq.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0';
-
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     const emailIn  = document.getElementById('email');
     const passIn   = document.getElementById('password');
     const statusP  = document.getElementById('status');
     const regBtn   = document.getElementById('register-btn');
     const logBtn   = document.getElementById('login-btn');
 
-    // REGISTER
-    regBtn.addEventListener('click', async () => {
+    // Fungsi bantu jana referral code 6 aksara
+    function makeReferral() {
+      return Math.random().toString(36).substr(2,6).toUpperCase();
+    }
+
+    // REGISTER → signup + save user + payment
+    regBtn.onclick = async () => {
+      statusP.style.color = 'red';
       statusP.textContent = '';
       const email = emailIn.value.trim();
       const pass  = passIn.value;
       if (!email || !pass) {
-        return statusP.textContent = 'Sila lengkapkan email & password.';
+        return statusP.textContent = 'Sila lengkapkan email & kata laluan.';
       }
-      // Cek dulu kalau email dah wujud
-      const { data:existing } = await supabase
+
+      // 1) Cek duplicate
+      let { data: existing } = await supabase
         .from('users')
         .select('email')
         .eq('email', email)
-        .single();
+        .maybeSingle();
       if (existing) {
-        return statusP.textContent = 'Email ini sudah daftar—gunakan Login.';
+        return statusP.textContent = 'Email sudah wujud, sila Login.';
       }
-      // Buat signup di Supabase Auth
-      const { data, error } = await supabase.auth.signUp({
-        email, password: pass
-      });
-      if (error) {
-        statusP.textContent = 'Daftar gagal: ' + error.message;
-      } else {
-        // Simpan juga ke jadual `users` (optional referral)
-        await supabase
-          .from('users')
-          .insert({ email })
-          .single();
-        statusP.style.color = 'green';
-        statusP.textContent = 'Berjaya daftar! Sila Login sekarang.';
-      }
-    });
 
-    // LOGIN
-    logBtn.addEventListener('click', async () => {
+      // 2) Signup di Supabase Auth
+      const { data: signupData, error: signupErr } = await supabase.auth.signUp({ email, password: pass });
+      if (signupErr) {
+        return statusP.textContent = 'Daftar gagal: ' + signupErr.message;
+      }
+
+      // 3) Simpan ke jadual users bersama referral code
+      const ref = makeReferral();
+      const { error: upErr } = await supabase
+        .from('users')
+        .insert({ email, referral_code: ref });
+      if (upErr) {
+        return statusP.textContent = 'Gagal simpan user: ' + upErr.message;
+      }
+
+      // 4) Panggil API create-bill untuk dapatkan billCode
+      statusP.style.color = 'black';
+      statusP.textContent = 'Sediakan pembayaran…';
+      try {
+        const resp = await fetch('/api/create-bill', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const json = await resp.json();
+        if (json.error || !json.billCode) {
+          throw new Error(json.error || 'Tiada BillCode dalam response');
+        }
+        // 5) Redirect terus ke ToyyibPay
+        window.location.href = `https://dev.toyyibpay.com/${json.billCode}`;
+      } catch (e) {
+        statusP.textContent = 'Ralat pembayaran: ' + e.message;
+      }
+    };
+
+    // LOGIN → biasa
+    logBtn.onclick = async () => {
+      statusP.style.color = 'red';
       statusP.textContent = '';
       const email = emailIn.value.trim();
       const pass  = passIn.value;
       if (!email || !pass) {
-        return statusP.textContent = 'Sila lengkapkan email & password.';
+        return statusP.textContent = 'Sila lengkapkan email & kata laluan.';
       }
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email, password: pass
-      });
+      const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
       if (error) {
         statusP.textContent = 'Login gagal: ' + error.message;
       } else {
-        // Berjaya login → pergi ke Dashboard
         window.location.href = 'dashboard.html';
       }
-    });
+    };
   </script>
 </body>
 </html>

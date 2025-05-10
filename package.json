@@ -1,0 +1,9 @@
+{
+    "name": "lancar-my-v2",
+    "version": "1.0.0",
+    "dependencies": {
+      "@supabase/supabase-js": "^2.34.0",
+      "@sendgrid/mail": "^7.7.0"
+    }
+  }
+  
