@@ -1,69 +1,105 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Lancar.my – Buat Laman Tanpa Kod</title>
-  <link rel="stylesheet" href="styles.css" />
+  <title>Lancar.my – Daftar / Login</title>
+  <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
   <header class="hero">
     <h1>Bina Laman Web Anda Tanpa Perlu Mengetik Kod</h1>
     <p>
-      Lancar.my memudahkan anda mencipta hingga 111 laman pendaratan secara percuma.
-      Masukkan e-mel anda, daftar, dan teruskan ke pembayaran.
+      Masukkan e-mel anda.  
+      Jika belum bayar → terus ke pembayaran ToyyibPay.  
+      Jika sudah bayar → kami hantar Magic-Link untuk login.
     </p>
 
     <input
       type="email"
-      id="checkout-email"
+      id="email-input"
       placeholder="Masukkan e-mel anda"
       style="padding:0.5rem; width:250px; margin-bottom:1rem;"
     />
-    <button id="daftar-btn" class="btn-primary">DAFTAR SEKARANG</button>
-
-    <!-- Tempat untuk papar error, pilihan -->
-    <div id="error-msg" style="color:red; margin-top:1rem;"></div>
+    <button id="action-btn" class="btn-primary">DAFTAR / LOGIN</button>
+    <p id="status-msg" style="color:green; margin-top:1rem;"></p>
   </header>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const emailInput = document.getElementById('checkout-email');
-      const btn        = document.getElementById('daftar-btn');
-      const errEl      = document.getElementById('error-msg');
+  <script type="module">
+    import { createClient }
+      from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-      btn.addEventListener('click', async () => {
-        errEl.innerText = '';  // clear previous error
-        const email = emailInput.value.trim();
-        if (!email) {
-          return errEl.innerText = 'Sila masukkan e-mel anda.';
-        }
+    // GANTI dengan credential Supabase anda:
+    const SUPABASE_URL      = 'https://bpxmqwgxjzphbavaikhq.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    const emailInput = document.getElementById('email-input');
+    const btn        = document.getElementById('action-btn');
+    const msg        = document.getElementById('status-msg');
+
+    btn.addEventListener('click', async () => {
+      const email = emailInput.value.trim();
+      if (!email) return alert('Sila masukkan e-mel anda.');
+
+      btn.disabled = true;
+      msg.textContent = 'Memproses…';
+
+      // 1) Semak sama ada email sudah ada
+      const { data: user, error: errUser } = await supabase
+        .from('users')
+        .select('email')
+        .eq('email', email)
+        .single();
+
+      if (errUser && errUser.code !== 'PGRST116') {
+        console.error(errUser);
+        alert('Ralat semak data: ' + errUser.message);
+        btn.disabled = false;
+        msg.textContent = '';
+        return;
+      }
+
+      if (!user) {
+        // ─── Belum bayar → checkout ───
         try {
           const resp = await fetch('/api/create-bill', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email })
           });
-
-          // 1) Jika bukan 200, baca teks dan throw
           if (!resp.ok) {
             const text = await resp.text();
-            throw new Error(text || `Status ${resp.status}`);
+            throw new Error(text || resp.statusText);
           }
-
-          // 2) Jika 200, parse JSON
           const { billCode } = await resp.json();
-          // 3) Redirect ke ToyyibPay
+          // Redirect ke ToyyibPay DEV
           window.location.href = `https://dev.toyyibpay.com/${billCode}`;
-
         } catch (err) {
-          console.error('create-bill error:', err);
-          // Papar error di laman dan alert sekali (optional)
-          errEl.innerText = err.message;
-          alert('Error create-bill: ' + err.message);
+          console.error('checkout error:', err);
+          alert('Gagal sambung ke ToyyibPay:\n' + err.message);
+          btn.disabled = false;
+          msg.textContent = '';
         }
-      });
+      } else {
+        // ─── Sudah bayar → magic-link ───
+        const { error: errOtp } = await supabase.auth.signInWithOtp({
+          email,
+          options: {
+            emailRedirectTo:
+              `${window.location.origin}/dashboard.html`
+          }
+        });
+        if (errOtp) {
+          console.error(errOtp);
+          alert('Gagal hantar pautan login: ' + errOtp.message);
+          msg.textContent = '';
+          btn.disabled = false;
+        } else {
+          msg.textContent =
+            'Pautan Magic-Link telah dihantar! Semak e-mel anda.';
+        }
+      }
     });
   </script>
 </body>

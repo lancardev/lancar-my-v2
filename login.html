@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Masuk ke Lancar.my</title>
   <link rel="stylesheet" href="styles.css"/>
 </head>
@@ -11,17 +11,18 @@
     <h2>Masuk ke Lancar.my</h2>
     <p>Masukkan e-mel & kata laluan anda untuk akses dashboard.</p>
     <input type="email" id="email" placeholder="you@domain.com"
-           style="padding:.5rem;width:250px;margin-right:1rem;"/>
+           style="padding:.5rem; width:250px; margin-right:1rem;"/>
     <input type="password" id="password" placeholder="Kata laluan"
-           style="padding:.5rem;width:250px;margin-right:1rem;"/>
+           style="padding:.5rem; width:250px; margin-right:1rem;"/>
     <button id="login-btn" class="btn-primary">Masuk</button>
-    <p id="msg" style="color:red;margin-top:1rem;"></p>
+    <p id="msg" style="color:red; margin-top:1rem;"></p>
   </main>
 
   <script type="module">
     import { createClient }
       from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
+    // Ganti dengan Supabase anda
     const SUPABASE_URL      = 'https://bpxmqwgxjzphbavaikhq.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0';
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -31,28 +32,31 @@
     const btn     = document.getElementById('login-btn');
     const msgP    = document.getElementById('msg');
 
-    // Prefill email from query?
-    const params = new URLSearchParams(location.search);
+    // Prefill email jika ?email= ada
+    const params = new URLSearchParams(window.location.search);
     if (params.get('email')) {
       emailIn.value = params.get('email');
     }
 
-    btn.onclick = async () => {
+    btn.addEventListener('click', async () => {
       const email = emailIn.value.trim();
       const pass  = passIn.value;
-      if (!email||!pass) {
-        return msgP.textContent = 'Sila lengkapkan e-mel & kata laluan.';
+      if (!email || !pass) {
+        msgP.textContent = 'Sila lengkapkan e-mel & kata laluan.';
+        return;
       }
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email, password: pass
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password: pass
       });
+
       if (error) {
-        msgP.textContent = error.message;
+        msgP.textContent = `Gagal login: ${error.message}`;
       } else {
-        // berjaya → dashboard
-        location.href = `dashboard.html`;
+        window.location.href = 'dashboard.html';
       }
-    };
+    });
   </script>
 </body>
 </html>
