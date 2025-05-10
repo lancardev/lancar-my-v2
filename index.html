@@ -35,7 +35,7 @@
     import { createClient } 
       from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    // Ganti dengan nilai Supabase anda:
+    // GANTI dengan milik anda
     const SUPABASE_URL      = 'https://bpxmqwgxjzphbavaikhq.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0';
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -50,37 +50,46 @@
       return Math.random().toString(36).substr(2,6).toUpperCase();
     }
 
-    // DAFTAR → signup + signIn + simpan referral_code + payment
+    // ----------------------------
+    // 1) DAFTAR → signup + simpan referral + pembayaran
+    // ----------------------------
     regBtn.onclick = async () => {
       statusP.style.color = 'red'; statusP.textContent = '';
       const email = emailIn.value.trim(), pass = passIn.value;
-      if (!email || !pass) return statusP.textContent = 'Sila lengkapkan kedua-dua medan.';
+      if (!email || !pass) {
+        return statusP.textContent = 'Sila lengkapkan kedua-dua medan.';
+      }
 
-      // 1) Cek duplicate
-      let { data: ex } = await supabase
+      // a) Cek duplicate
+      const { data: ex } = await supabase
         .from('users')
         .select('email')
         .eq('email', email)
         .maybeSingle();
-      if (ex) return statusP.textContent = 'Email sudah daftar, sila Login.';
+      if (ex) {
+        return statusP.textContent = 'Email sudah daftar, sila Login.';
+      }
 
-      // 2) Signup Auth
-      const { error: e1 } = await supabase.auth.signUp({ email, password: pass });
-      if (e1) return statusP.textContent = 'Daftar gagal: ' + e1.message;
+      // b) Signup di Supabase Auth (session akan diset terus)
+      const { data: d1, error: e1 } = await supabase.auth.signUp({
+        email, password: pass
+      });
+      if (e1) {
+        return statusP.textContent = 'Daftar gagal: ' + e1.message;
+      }
 
-      // 3) **Sign-in semula** untuk simpan session
-      const { error: e1b } = await supabase.auth.signInWithPassword({ email, password: pass });
-      if (e1b) return statusP.textContent = 'Gagal simpan sesi: ' + e1b.message;
-
-      // 4) Simpan referral_code
+      // c) Simpan ke jadual users + referral_code
       const ref = makeReferral();
       const { error: e2 } = await supabase
         .from('users')
         .insert({ email, referral_code: ref });
-      if (e2) return statusP.textContent = 'Gagal simpan user: ' + e2.message;
+      if (e2) {
+        return statusP.textContent = 'Gagal simpan user: ' + e2.message;
+      }
 
-      // 5) Panggil API create-bill
-      statusP.style.color = 'black'; statusP.textContent = 'Sediakan pembayaran…';
+      // d) Panggil API create-bill
+      statusP.style.color = 'black';
+      statusP.textContent = 'Sediakan pembayaran…';
       try {
         const resp = await fetch('/api/create-bill', {
           method:'POST',
@@ -89,21 +98,30 @@
         });
         const j = await resp.json();
         if (!j.billCode) throw new Error(j.error||'Tiada BillCode');
-        // 6) Redirect terus ke ToyyibPay checkout
+        // e) Redirect terus ke ToyyibPay
         window.location.href = `https://dev.toyyibpay.com/${j.billCode}`;
       } catch(err) {
         statusP.textContent = 'Ralat: ' + err.message;
       }
     };
 
-    // LOGIN → biasa
+    // ----------------------------
+    // 2) LOGIN → signIn biasa
+    // ----------------------------
     logBtn.onclick = async () => {
       statusP.style.color = 'red'; statusP.textContent = '';
       const email = emailIn.value.trim(), pass = passIn.value;
-      if (!email || !pass) return statusP.textContent = 'Sila lengkapkan kedua-dua medan.';
-      const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
-      if (error) statusP.textContent = 'Login gagal: ' + error.message;
-      else window.location.href = 'dashboard.html';
+      if (!email || !pass) {
+        return statusP.textContent = 'Sila lengkapkan kedua-dua medan.';
+      }
+      const { error } = await supabase.auth.signInWithPassword({
+        email, password: pass
+      });
+      if (error) {
+        statusP.textContent = 'Login gagal: ' + error.message;
+      } else {
+        window.location.href = 'dashboard.html';
+      }
     };
   </script>
 </body>
