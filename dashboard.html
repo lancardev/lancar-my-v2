@@ -16,7 +16,8 @@
     #form-status { margin-top:.5rem; min-height:1.2rem; }
     table { width:100%; border-collapse: collapse; margin-top:1rem; }
     th, td { text-align:left; padding:.5rem; border-bottom:1px solid #ddd; }
-    
+    a.subdomain-link { color: #0070f3; text-decoration: none; }
+
     /* --- Modal Styles --- */
     #editModal {
       position: fixed; top:0; left:0;
@@ -69,7 +70,7 @@
       <thead>
         <tr>
           <th>Title</th>
-          <th>Code</th>
+          <th>Subdomain</th>
           <th>Dicipta Pada</th>
           <th>Edit</th>
         </tr>
@@ -151,7 +152,13 @@
       tbody.innerHTML = data.map(p => `
         <tr>
           <td>${p.title}</td>
-          <td>${p.code}</td>
+          <td>
+            <a
+              href="https://${p.code}.lancar.my"
+              target="_blank"
+              class="subdomain-link"
+            >${p.code}.lancar.my</a>
+          </td>
           <td>${new Date(p.created_at).toLocaleString()}</td>
           <td>
             <button class="edit-btn"
@@ -243,14 +250,14 @@
         statusP.textContent = 'Gagal cipta projek: ' + error.message;
       } else {
         statusP.style.color = 'green';
-        statusP.textContent = 'Berjaya! Kod projek: ' + slug;
+        statusP.textContent = 'Berjaya! Subdomain: ' + slug + '.lancar.my';
         nameIn.value = '';
         codeIn.value = '';
         loadProjects();
       }
     });
 
-    // Kick off
+    // Mulakan semuanya
     init();
   </script>
 </body>
