@@ -1,98 +1,154 @@
-<script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard Lancar.my</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 2rem; background:#f5f5f5; }
+    .card { background:#fff; padding:1.5rem; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); max-width:800px; margin:0 auto; }
+    h1 { display: flex; justify-content: space-between; align-items: center; margin-top:0; }
+    #logout-btn { background:#e53e3e; color:#fff; border:none; padding:.5rem 1rem; border-radius:4px; cursor:pointer; }
+    label { display:block; margin:1rem 0 .5rem; }
+    input, textarea { width:100%; padding:.5rem; border:1px solid #ccc; border-radius:4px; }
+    #create-btn { background:#007bff; color:#fff; border:none; padding:.5rem 1rem; border-radius:4px; cursor:pointer; }
+    #form-status { margin-top:.5rem; min-height:1.2rem; }
+    table { width:100%; border-collapse: collapse; margin-top:1rem; }
+    th, td { text-align:left; padding:.5rem; border-bottom:1px solid #ddd; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>
+      <span>Dashboard Anda</span>
+      <button id="logout-btn">Logout</button>
+    </h1>
+    <p>Anda login sebagai: <strong><span id="user-email"></span></strong></p>
 
-  const SUPABASE_URL      = 'https://bpxmqwgxjzphbavaikhq.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0';
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <label for="proj-name">Nama Projek (untuk subdomain):</label>
+    <input type="text" id="proj-name" placeholder="contoh: krepikSedap"/>
 
-  const userEmailEl = document.getElementById('user-email');
-  const logoutBtn   = document.getElementById('logout-btn');
-  const tbody       = document.getElementById('projects-tbody');
-  const createBtn   = document.getElementById('create-btn');
-  const nameIn      = document.getElementById('proj-name');
-  const codeIn      = document.getElementById('ai-code');
-  const statusP     = document.getElementById('form-status');
+    <label for="ai-code">Tampal Kod AI:</label>
+    <textarea id="ai-code" rows="6" placeholder="Masukkan kod AI di sini…"></textarea>
 
-  let user;
+    <button id="create-btn">LANCAR</button>
+    <p id="form-status"></p>
 
-  async function init() {
-    const { data } = await supabase.auth.getUser();
-    user = data.user;
-    if (!user) {
-      window.location.href = 'index.html';
-      return;
-    }
-    userEmailEl.textContent = user.email;
-    loadProjects();
-  }
+    <h2>Projek Anda</h2>
+    <table>
+      <thead>
+        <tr><th>Title</th><th>Code</th><th>Dicipta Pada</th></tr>
+      </thead>
+      <tbody id="projects-tbody">
+        <!-- Isi projek akan dimuat di sini -->
+      </tbody>
+    </table>
+  </div>
 
-  async function loadProjects() {
-    tbody.innerHTML = '<tr><td colspan="3">Memuatkan…</td></tr>';
-    const { data, error } = await supabase
-      .from('projects')
-      .select('title,code,created_at')
-      .eq('email', user.email)
-      .order('created_at', { ascending: false });
+  <!-- Script diletakkan di bawah agar semua elemen sudah ada di DOM -->
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    if (error) {
-      tbody.innerHTML = `<tr><td colspan="3">Ralat: ${error.message}</td></tr>`;
-    } else if (data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="3">Tiada projek lagi.</td></tr>';
-    } else {
-      tbody.innerHTML = data.map(p => `
-        <tr>
-          <td>${p.title}</td>
-          <td>${p.code}</td>
-          <td>${new Date(p.created_at).toLocaleString()}</td>
-        </tr>
-      `).join('');
-    }
-  }
+    const SUPABASE_URL      = 'https://bpxmqwgxjzphbavaikhq.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  logoutBtn.addEventListener('click', async () => {
-    await supabase.auth.signOut();
-    window.location.href = 'index.html';
-  });
+    // Ambil elemen
+    const userEmailEl = document.getElementById('user-email');
+    const logoutBtn   = document.getElementById('logout-btn');
+    const nameIn      = document.getElementById('proj-name');
+    const codeIn      = document.getElementById('ai-code');
+    const createBtn   = document.getElementById('create-btn');
+    const statusP     = document.getElementById('form-status');
+    const tbody       = document.getElementById('projects-tbody');
 
-  createBtn.addEventListener('click', async () => {
-    const title  = nameIn.value.trim();
-    const aiCode = codeIn.value.trim();
+    let user;
 
-    statusP.textContent = '';
-    if (!title || !aiCode) {
-      statusP.style.color = 'red';
-      statusP.textContent = 'Sila isi nama projek dan kod AI anda.';
-      return;
-    }
-
-    const slug = title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      + '-' + Math.random().toString(36).slice(-4);
-
-    // ← Insert termasuk ai_code
-    const { error } = await supabase
-      .from('projects')
-      .insert({
-        email:   user.email,
-        title:   title,
-        code:    slug,
-        ai_code: aiCode
-      })
-      .select();
-
-    if (error) {
-      statusP.style.color = 'red';
-      statusP.textContent = 'Gagal cipta projek: ' + error.message;
-    } else {
-      statusP.style.color = 'green';
-      statusP.textContent = 'Berjaya! Kod projek: ' + slug;
-      nameIn.value  = '';
-      codeIn.value  = '';
+    // Inisialisasi: cek auth & load projek
+    async function init() {
+      const { data } = await supabase.auth.getUser();
+      user = data.user;
+      if (!user) {
+        window.location.href = 'index.html';
+        return;
+      }
+      userEmailEl.textContent = user.email;
       loadProjects();
     }
-  });
 
-  init();
-</script>
+    // Muat semua projek milik user
+    async function loadProjects() {
+      tbody.innerHTML = '<tr><td colspan="3">Memuatkan…</td></tr>';
+      const { data, error } = await supabase
+        .from('projects')
+        .select('title,code,created_at')
+        .eq('email', user.email)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        tbody.innerHTML = `<tr><td colspan="3">Ralat: ${error.message}</td></tr>`;
+      } else if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="3">Tiada projek lagi.</td></tr>';
+      } else {
+        tbody.innerHTML = data.map(p => `
+          <tr>
+            <td>${p.title}</td>
+            <td>${p.code}</td>
+            <td>${new Date(p.created_at).toLocaleString()}</td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    // Logout
+    logoutBtn.addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      window.location.href = 'index.html';
+    });
+
+    // Cipta projek baru termasuk ai_code
+    createBtn.addEventListener('click', async () => {
+      const title  = nameIn.value.trim();
+      const aiCode = codeIn.value.trim();
+      statusP.textContent = '';
+
+      if (!title || !aiCode) {
+        statusP.style.color = 'red';
+        statusP.textContent = 'Sila isi nama projek dan kod AI anda.';
+        return;
+      }
+
+      const slug = title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        + '-' + Math.random().toString(36).slice(-4);
+
+      const { error } = await supabase
+        .from('projects')
+        .insert({
+          email:   user.email,
+          title:   title,
+          code:    slug,
+          ai_code: aiCode
+        })
+        .select();
+
+      if (error) {
+        statusP.style.color = 'red';
+        statusP.textContent = 'Gagal cipta projek: ' + error.message;
+      } else {
+        statusP.style.color = 'green';
+        statusP.textContent = 'Berjaya! Kod projek: ' + slug;
+        nameIn.value = '';
+        codeIn.value = '';
+        loadProjects();
+      }
+    });
+
+    // Jalankan init selepas script ter-load
+    init();
+  </script>
+</body>
+</html>
