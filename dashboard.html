@@ -163,28 +163,30 @@
         </tr>
       `).join('');
 
-      // Attach handler Edit
+      // Pasang listener Edit
       document.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', onEditClick);
       });
     }
 
-    // 3) Handler butang Edit
-    function onEditClick(e) {
-      const btn = e.currentTarget;
-      editingProjectId = btn.dataset.id;
-      modalTitle.textContent = btn.dataset.title;
-      // ambil ai_code sedia ada
-      supabase
+    // 3) Handler butang Edit (async, pre-fill kod lama)
+    async function onEditClick(e) {
+      const id = e.currentTarget.dataset.id;
+      editingProjectId = id;
+      modalTitle.textContent = e.currentTarget.dataset.title;
+
+      const { data, error } = await supabase
         .from('projects')
         .select('ai_code')
-        .eq('id', editingProjectId)
-        .single()
-        .then(({ data, error }) => {
-          if (error) return alert('Gagal muat kod: ' + error.message);
-          editTextarea.value = data.ai_code || '';
-          editModal.style.display = 'flex';
-        });
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        return alert('Gagal muat kod AI: ' + error.message);
+      }
+
+      editTextarea.value = data.ai_code || '';
+      editModal.style.display = 'flex';
     }
 
     // 4) Simpan perubahan ai_code
@@ -214,7 +216,7 @@
       window.location.href = 'index.html';
     });
 
-    // 7) Cipta projek baru (seperti sedia kala)
+    // 7) Cipta projek baru
     createBtn.addEventListener('click', async () => {
       const title  = nameIn.value.trim();
       const aiCode = codeIn.value.trim();
@@ -248,7 +250,7 @@
       }
     });
 
-    // Mulakan semuanya
+    // Kick off
     init();
   </script>
 </body>
