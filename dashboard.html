@@ -4,7 +4,6 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard Lancar.my</title>
-  <link rel="stylesheet" href="styles.css"/>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -137,6 +136,7 @@
       <button id="logout-btn">Logout</button>
     </h1>
     <p>Anda login sebagai: <strong><span id="user-email"></span></strong></p>
+    <p>Referral Code anda: <strong><span id="user-referral"></span></strong></p>
 
     <label for="proj-name">Nama Projek (untuk subdomain):</label>
     <input type="text" id="proj-name" placeholder="contoh: krepikSedap"/>
@@ -176,11 +176,12 @@
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    const SUPABASE_URL      = 'https://bpxmqwgxjzphbavaikhq.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0'; // Gantikan dengan key penuh anda
+    const SUPABASE_URL = 'https://bpxmqwgxjzphbavaikhq.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0';
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const userEmailEl = document.getElementById('user-email');
+    const referralSpan = document.getElementById('user-referral');
     const logoutBtn = document.getElementById('logout-btn');
     const nameIn = document.getElementById('proj-name');
     const codeIn = document.getElementById('ai-code');
@@ -205,6 +206,16 @@
         return;
       }
       userEmailEl.textContent = user.email;
+
+      // Paparkan referral_code
+      const { data: userRow, error: referralError } = await supabase
+        .from('users')
+        .select('referral_code')
+        .eq('email', user.email)
+        .single();
+
+      referralSpan.textContent = (userRow && userRow.referral_code) ? userRow.referral_code : '-';
+
       loadProjects();
     }
 
