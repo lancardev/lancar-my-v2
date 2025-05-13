@@ -223,7 +223,7 @@
       window.location.href = 'index.html';
     });
 
-    // 7) Cipta projek baru
+    // 7) Cipta projek baru (slug = title sahaja tanpa rawak)
     createBtn.addEventListener('click', async () => {
       const title  = nameIn.value.trim();
       const aiCode = codeIn.value.trim();
@@ -235,11 +235,11 @@
         return;
       }
 
+      // Slug hanya dari title, tiada suffix rawak
       const slug = title
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
-        + '-' + Math.random().toString(36).slice(-4);
+        .replace(/^-+|-+$/g, '');
 
       const { error } = await supabase
         .from('projects')
