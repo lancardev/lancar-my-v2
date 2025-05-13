@@ -6,43 +6,125 @@
   <title>Dashboard Lancar.my</title>
   <link rel="stylesheet" href="styles.css"/>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 2rem; background: #f5f5f5; }
-    .card { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width:800px; margin:0 auto; }
-    h1 { display: flex; justify-content: space-between; align-items: center; margin-top:0; }
-    #logout-btn { background: #e53e3e; color:#fff; border:none; padding:.5rem 1rem; border-radius:4px; cursor:pointer; }
-    label { display:block; margin:1rem 0 .5rem; }
-    input, textarea { width:100%; padding:.5rem; border:1px solid #ccc; border-radius:4px; }
-    #create-btn { background:#007bff; color:#fff; border:none; padding:.5rem 1rem; border-radius:4px; cursor:pointer; }
-    #form-status { margin-top:.5rem; min-height:1.2rem; }
-    table { width:100%; border-collapse: collapse; margin-top:1rem; }
-    th, td { text-align:left; padding:.5rem; border-bottom:1px solid #ddd; }
-    a.subdomain-link { color: #0070f3; text-decoration: none; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 1rem;
+      background: #f5f5f5;
+    }
+    .card {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-width: 100%;
+      width: 100%;
+      box-sizing: border-box;
+      margin: 0 auto;
+    }
+    h1 {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 0;
+    }
+    #logout-btn {
+      background: #e53e3e;
+      color: #fff;
+      border: none;
+      padding: .5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    label {
+      display: block;
+      margin: 1rem 0 .5rem;
+    }
+    input, textarea {
+      width: 100%;
+      padding: .5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    #create-btn {
+      background: #007bff;
+      color: #fff;
+      border: none;
+      padding: .5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    #form-status {
+      margin-top: .5rem;
+      min-height: 1.2rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      overflow-x: auto;
+      display: block;
+    }
+    th, td {
+      text-align: left;
+      padding: .5rem;
+      border-bottom: 1px solid #ddd;
+      white-space: nowrap;
+    }
+    a.subdomain-link {
+      color: #0070f3;
+      text-decoration: none;
+    }
 
-    /* --- Modal Styles --- */
+    @media (max-width: 600px) {
+      h1 {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      #logout-btn {
+        align-self: flex-end;
+      }
+    }
+
     #editModal {
-      position: fixed; top:0; left:0;
-      width:100%; height:100%;
-      background: rgba(0,0,0,0.5);
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
       display: none;
-      justify-content: center; align-items: center;
+      justify-content: center;
+      align-items: center;
       z-index: 1000;
     }
     #editModal .modal-content {
-      background: #fff; padding: 1.5rem;
-      border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      width: 90%; max-width: 600px;
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      width: 90%;
+      max-width: 600px;
     }
     #editModal textarea {
-      width: 100%; height: 200px;
-      padding: .5rem; border:1px solid #ccc; border-radius:4px;
+      width: 100%;
+      height: 200px;
+      padding: .5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
       font-family: monospace;
     }
     #editModal .modal-actions {
-      text-align: right; margin-top: .75rem;
+      text-align: right;
+      margin-top: .75rem;
     }
     #editModal .modal-actions button {
-      padding: .5rem 1rem; margin-left: .5rem;
-      border: none; border-radius:4px; cursor: pointer;
+      padding: .5rem 1rem;
+      margin-left: .5rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
     }
     #saveEditBtn { background: #38a169; color: #fff; }
     #cancelEditBtn { background: #e53e3e; color: #fff; }
@@ -75,9 +157,7 @@
           <th>Edit</th>
         </tr>
       </thead>
-      <tbody id="projects-tbody">
-        <!-- Projek akan dimuatkan di sini -->
-      </tbody>
+      <tbody id="projects-tbody"></tbody>
     </table>
   </div>
 
@@ -97,29 +177,26 @@
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
     const SUPABASE_URL      = 'https://bpxmqwgxjzphbavaikhq.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0'; // Gantikan dengan key penuh anda
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Elemen DOM
-    const userEmailEl   = document.getElementById('user-email');
-    const logoutBtn     = document.getElementById('logout-btn');
-    const nameIn        = document.getElementById('proj-name');
-    const codeIn        = document.getElementById('ai-code');
-    const createBtn     = document.getElementById('create-btn');
-    const statusP       = document.getElementById('form-status');
-    const tbody         = document.getElementById('projects-tbody');
+    const userEmailEl = document.getElementById('user-email');
+    const logoutBtn = document.getElementById('logout-btn');
+    const nameIn = document.getElementById('proj-name');
+    const codeIn = document.getElementById('ai-code');
+    const createBtn = document.getElementById('create-btn');
+    const statusP = document.getElementById('form-status');
+    const tbody = document.getElementById('projects-tbody');
 
-    // Modal & edit
-    const editModal     = document.getElementById('editModal');
-    const modalTitle    = document.getElementById('modalProjectTitle');
-    const editTextarea  = document.getElementById('edit-ai-code');
-    const saveEditBtn   = document.getElementById('saveEditBtn');
+    const editModal = document.getElementById('editModal');
+    const modalTitle = document.getElementById('modalProjectTitle');
+    const editTextarea = document.getElementById('edit-ai-code');
+    const saveEditBtn = document.getElementById('saveEditBtn');
     const cancelEditBtn = document.getElementById('cancelEditBtn');
     let editingProjectId = null;
 
     let user;
 
-    // 1) Inisialisasi user & load projek
     async function init() {
       const { data } = await supabase.auth.getUser();
       user = data.user;
@@ -131,7 +208,6 @@
       loadProjects();
     }
 
-    // 2) Load & render semua projek
     async function loadProjects() {
       tbody.innerHTML = '<tr><td colspan="4">Memuatkan…</td></tr>';
       const { data, error } = await supabase
@@ -144,6 +220,7 @@
         tbody.innerHTML = `<tr><td colspan="4">Ralat: ${error.message}</td></tr>`;
         return;
       }
+
       if (!data.length) {
         tbody.innerHTML = '<tr><td colspan="4">Tiada projek lagi.</td></tr>';
         return;
@@ -152,31 +229,17 @@
       tbody.innerHTML = data.map(p => `
         <tr>
           <td>${p.title}</td>
-          <td>
-            <a
-              href="https://${p.code}.lancar.my"
-              target="_blank"
-              class="subdomain-link"
-            >${p.code}.lancar.my</a>
-          </td>
+          <td><a href="https://${p.code}.lancar.my" class="subdomain-link" target="_blank">${p.code}.lancar.my</a></td>
           <td>${new Date(p.created_at).toLocaleString()}</td>
-          <td>
-            <button class="edit-btn"
-                    data-id="${p.id}"
-                    data-title="${p.title}">
-              Edit
-            </button>
-          </td>
+          <td><button class="edit-btn" data-id="${p.id}" data-title="${p.title}">Edit</button></td>
         </tr>
       `).join('');
 
-      // Pasang listener Edit
       document.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', onEditClick);
       });
     }
 
-    // 3) Handler butang Edit (async, pre-fill kod lama)
     async function onEditClick(e) {
       const id = e.currentTarget.dataset.id;
       editingProjectId = id;
@@ -196,7 +259,6 @@
       editModal.style.display = 'flex';
     }
 
-    // 4) Simpan perubahan ai_code
     saveEditBtn.addEventListener('click', async () => {
       const newAiCode = editTextarea.value;
       const { error } = await supabase
@@ -207,25 +269,23 @@
       if (error) {
         return alert('Gagal simpan: ' + error.message);
       }
+
       alert('Kod AI berjaya dikemas kini!');
       editModal.style.display = 'none';
       loadProjects();
     });
 
-    // 5) Batal / tutup modal
     cancelEditBtn.addEventListener('click', () => {
       editModal.style.display = 'none';
     });
 
-    // 6) Logout
     logoutBtn.addEventListener('click', async () => {
       await supabase.auth.signOut();
       window.location.href = 'index.html';
     });
 
-    // 7) Cipta projek baru (slug = title sahaja tanpa rawak)
     createBtn.addEventListener('click', async () => {
-      const title  = nameIn.value.trim();
+      const title = nameIn.value.trim();
       const aiCode = codeIn.value.trim();
       statusP.textContent = '';
 
@@ -235,7 +295,6 @@
         return;
       }
 
-      // Slug hanya dari title, tiada suffix rawak
       const slug = title
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
@@ -257,7 +316,6 @@
       }
     });
 
-    // Mulakan semuanya
     init();
   </script>
 </body>
