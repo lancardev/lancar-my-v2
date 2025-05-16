@@ -2,14 +2,43 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8">
-  <title>Lancar.my - Halaman Utama</title>
+  <title>Halaman Utama</title>
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
   <div style="text-align:center; margin-top: 20%;">
     <h1>Selamat Datang ke Lancar.my</h1>
-    <button onclick="window.location.href='window.location.href = `https://dev.toyyibpay.com/B/${j.billCode}`
-'">DAFTAR</button>
+    <input type="email" id="email" placeholder="Masukkan Email Anda" required />
+    <br><br>
+    <button onclick="daftar()">DAFTAR</button>
+    <p id="statusP"></p>
   </div>
+
+  <script>
+    async function daftar() {
+      const email = document.getElementById("email").value;
+      const statusP = document.getElementById("statusP");
+      statusP.style.color = 'black';
+      statusP.textContent = 'Sediakan pembayaran…';
+
+      try {
+        const resp = await fetch('/api/create-bill', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+
+        const j = await resp.json();
+        if (!j.billCode) throw new Error(j.error || 'Tiada BillCode');
+
+        // Redirect ke laman bil ToyyibPay
+        window.location.href = `https://dev.toyyibpay.com/B/${j.billCode}`;
+      } catch (err) {
+        statusP.style.color = 'red';
+        statusP.textContent = 'Ralat: ' + err.message;
+      }
+    }
+  </script>
 </body>
 </html>

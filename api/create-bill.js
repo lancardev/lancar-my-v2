@@ -1,42 +1,45 @@
-// api/create-bill.js
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    res.setHeader('Allow',['POST']);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
+
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: "Email diperlukan" });
+  }
+
+  const secretKey = process.env.TOYYIBPAY_SECRET;
+  const categoryCode = process.env.TOYYIBPAY_CATEGORY;
+
+  const bodyData = new URLSearchParams({
+    userSecretKey: secretKey,
+    categoryCode: categoryCode,
+    billName: "Pendaftaran Pengguna Lancar.my",
+    billDescription: "Akses penuh untuk bina landing page",
+    billPriceSetting: "fixed",
+    billPayorInfo: "true",
+    billAmount: "100", // RM1.00 (dalam sen)
+    billReturnUrl: "https://www.lancar.my/successpayment.html?email=" + email + "&status_id=1",
+    billCallbackUrl: "",
+    billExternalReferenceNo: Date.now().toString(),
+    billTo: email,
+    billEmail: email
+  });
+
   try {
-    const { email } = req.body;
-    if (!email) throw new Error('Tiada email');
-
-    const BASE_URL = process.env.BASE_URL;  // contoh: https://lancar-my-v2.vercel.app
-
-    const form = new URLSearchParams({
-      userSecretKey:   process.env.TOYYIBPAY_SECRET,
-      categoryCode:    process.env.TOYYIBPAY_CATEGORY,
-      billName:        'Langganan Lancar.my',
-      billDescription: 'Akses penuh Lancar.my selama 1 bulan',
-      billPriceSetting:'1',
-      billAmount:      '100',
-      billPayorInfo:   '0',
-      billReturnUrl:   `${BASE_URL}/dashboard.html`,       // **terus ke dashboard**
-      billCallbackUrl: `${BASE_URL}/api/verify-payment`
+    const response = await fetch("https://dev.toyyibpay.com/index.php/api/createBill", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: bodyData.toString()
     });
 
-    const resp = await fetch(
-      'https://dev.toyyibpay.com/index.php/api/createBill',
-      { method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded' }, body:form }
-    );
-    const text = await resp.text();
-    let json;
-    try { json = JSON.parse(text); }
-    catch { throw new Error(`Unexpected response: ${text}`); }
-
-    const billCode = Array.isArray(json)? json[0]?.BillCode : json.BillCode;
-    if (!billCode) throw new Error('Tiada BillCode dalam response');
-
-    res.status(200).json({ billCode });
-  } catch(err) {
-    console.error('create-bill error:', err);
-    res.status(400).json({ error: err.message });
+    const result = await response.json();
+    if (Array.isArray(result) && result[0].BillCode) {
+      return res.status(200).json({ billCode: result[0].BillCode });
+    } else {
+      return res.status(400).json({ error: "Gagal cipta bill", detail: result });
+    }
+  } catch (err) {
+    return res.status(500).json({ error: "Server error", detail: err.message });
   }
 }
