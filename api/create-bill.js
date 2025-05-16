@@ -34,12 +34,15 @@ export default async function handler(req, res) {
     });
 
     const result = await response.json();
+    console.log("ToyyibPay response:", result); // ✅ Debug di console
+
     if (Array.isArray(result) && result[0].BillCode) {
       return res.status(200).json({ billCode: result[0].BillCode });
     } else {
       return res.status(400).json({ error: "Gagal cipta bill", detail: result });
     }
   } catch (err) {
+    console.error("Server error:", err.message); // ✅ Debug jika server fail
     return res.status(500).json({ error: "Server error", detail: err.message });
   }
 }
