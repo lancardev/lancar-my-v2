@@ -22,7 +22,7 @@
     const status_id = urlParams.get('status_id');
     const email = urlParams.get('email');
 
-    const supabase = supabase.createClient(
+    const client = supabase.createClient(
       'https://bpxmqwgxjzphbavaikhq.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0'
     );
@@ -35,7 +35,7 @@
         const password = Math.random().toString(36).slice(-8);
         const referralCode = Math.random().toString(36).substr(2, 6).toUpperCase();
 
-        const { data, error } = await supabase.from("users").insert([
+        const { error } = await client.from("users").insert([
           { email: email, referral_code: referralCode, password: password }
         ]);
 
@@ -65,7 +65,7 @@
         return;
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error } = await client.auth.signInWithPassword({
         email: email,
         password: password
       });
