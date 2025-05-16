@@ -36,7 +36,7 @@
         const referralCode = Math.random().toString(36).substr(2, 6).toUpperCase();
 
         const { data, error } = await supabase.from("users").insert([
-          { email: email, referral_code: referralCode }
+          { email: email, referral_code: referralCode, password: password }
         ]);
 
         if (error) {

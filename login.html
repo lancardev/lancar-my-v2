@@ -1,24 +1,22 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Login - Lancar.my</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 3rem; }
-    input { padding: 0.5rem; margin: 0.5rem; width: 250px; }
-    button { padding: 0.5rem 1.5rem; }
-    .error { color: red; margin-top: 1rem; }
+    body { font-family: Arial; text-align: center; padding: 50px; }
+    input, button { padding: 8px; margin: 5px; }
+    .error { color: red; }
   </style>
 </head>
 <body>
-  <h1>Login ke Lancar.my</h1>
-  <input type="email" id="email" placeholder="Email" required><br>
-  <input type="password" id="password" placeholder="Kata Laluan" required><br>
+  <h1>Login Pengguna</h1>
+  <input type="email" id="email" placeholder="Email"><br>
+  <input type="password" id="password" placeholder="Kata Laluan"><br>
   <button onclick="login()">Login</button>
-  <div class="error" id="errorMsg"></div>
+  <p id="status" class="error"></p>
 
   <script>
     const supabase = supabase.createClient(
@@ -29,13 +27,20 @@
     async function login() {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
-      const savedEmail = localStorage.getItem("lancar_email");
-      const savedPass = localStorage.getItem("lancar_password");
+      const status = document.getElementById("status");
 
-      if (email === savedEmail && password === savedPass) {
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("email", email)
+        .eq("password", password);
+
+      if (data.length > 0) {
+        localStorage.setItem("lancar_email", email);
+        localStorage.setItem("lancar_password", password);
         window.location.href = "dashboard.html";
       } else {
-        document.getElementById("errorMsg").textContent = "Tidak boleh login sebab tidak berdaftar.";
+        status.textContent = "Tidak boleh login. Email atau kata laluan salah atau tidak berdaftar.";
       }
     }
   </script>
