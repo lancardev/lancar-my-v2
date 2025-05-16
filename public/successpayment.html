@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Pembayaran - Lancar.my</title>
-  <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body { font-family: Arial; text-align: center; padding: 50px; }
@@ -18,17 +17,18 @@
   <button onclick="window.location.href='login.html'">Login</button>
 
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const status_id = urlParams.get('status_id');
-    const email = urlParams.get('email');
-
-    const supabase = supabase.createClient(
+    // ✅ Pindah atas, sebelum digunakan
+    const supabase = window.supabase.createClient(
       'https://bpxmqwgxjzphbavaikhq.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0'
     );
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const status_id = urlParams.get('status_id');
+    const email = urlParams.get('email');
+
     async function prosesPembayaran() {
-      if (status_id === "1") {
+      if (status_id === "1" && email) {
         document.getElementById("status").textContent = "Terima kasih atas pembayaran anda!";
         document.getElementById("message").innerHTML = '<span class="blue">Sila salin kata laluan login anda di bawah.</span>';
 
@@ -41,14 +41,16 @@
 
         if (error) {
           console.error("Supabase error:", error.message);
+          document.getElementById("message").innerHTML = `<span class="error">Gagal simpan ke database: ${error.message}</span>`;
+          return;
         }
 
         localStorage.setItem("lancar_email", email);
         localStorage.setItem("lancar_password", password);
 
         document.getElementById("loginInfo").innerHTML =
-          '<p><strong>Email:</strong> ' + email + '</p>' +
-          '<p><strong>Kata Laluan:</strong> <span class="blue">' + password + '</span></p>';
+          `<p><strong>Email:</strong> ${email}</p>
+           <p><strong>Kata Laluan:</strong> <span class="blue">${password}</span></p>`;
       } else {
         document.getElementById("status").textContent = "PEMBAYARAN GAGAL";
         document.getElementById("status").classList.add("error");
