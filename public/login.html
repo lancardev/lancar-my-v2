@@ -3,7 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <title>Login Pengguna</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+    const supabase = createClient(
+      'https://bpxmqwgxjzphbavaikhq.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0'
+    );
+
+    const loginBtn = document.getElementById('login-btn');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const message = document.getElementById('message');
+
+    loginBtn.addEventListener('click', async () => {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+      message.textContent = '';
+
+      if (!email || !password) {
+        message.textContent = 'Sila masukkan email dan kata laluan.';
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        message.textContent = 'Login gagal: ' + error.message;
+      } else {
+        localStorage.setItem('lancar_email', email);
+        window.location.href = 'dashboard.html';
+      }
+    });
+  </script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -26,46 +58,9 @@
 </head>
 <body>
   <h1>Login Pengguna</h1>
-
   <input type="email" id="email" placeholder="Email" required /><br />
   <input type="password" id="password" placeholder="Kata Laluan" required /><br />
-  <button onclick="login()">Login</button>
-
+  <button id="login-btn">Login</button>
   <div id="message" class="error"></div>
-
-  <script>
-    // ✅ PASTIKAN supabase dicipta dulu
-    const supabase = window.supabase.createClient(
-      'https://bpxmqwgxjzphbavaikhq.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0'
-    );
-
-    async function login() {
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value.trim();
-      const message = document.getElementById('message');
-
-      message.textContent = '';
-
-      if (!email || !password) {
-        message.textContent = 'Sila masukkan email dan kata laluan.';
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('users')
-        .select('email, password')
-        .eq('email', email)
-        .eq('password', password)
-        .single();
-
-      if (error || !data) {
-        message.textContent = 'Tidak boleh login. Email atau kata laluan salah.';
-      } else {
-        localStorage.setItem('lancar_email', email);
-        window.location.href = 'dashboard.html';
-      }
-    }
-  </script>
 </body>
 </html>

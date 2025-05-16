@@ -206,12 +206,13 @@
     let user;
 
     async function init() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session || !session.user) {
+      const { data: { user: currentUser }, error } = await supabase.auth.getUser();
+      if (!currentUser) {
         window.location.href = 'index.html';
         return;
       }
-      user = session.user;
+
+      user = currentUser;
       userEmailEl.textContent = user.email;
 
       const { data: userRow } = await supabase
