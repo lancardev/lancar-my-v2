@@ -33,7 +33,7 @@
         if (!j.billCode) throw new Error(j.error || 'Tiada BillCode');
 
         // Redirect ke laman bil ToyyibPay
-        window.location.href = `https://dev.toyyibpay.com/B/${j.billCode}`;
+        window.location.href = `https://dev.toyyibpay.com/${j.billCode}`;
       } catch (err) {
         statusP.style.color = 'red';
         statusP.textContent = 'Ralat: ' + err.message;
