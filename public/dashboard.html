@@ -28,7 +28,7 @@
       flex-wrap: wrap;
       margin-top: 0;
     }
-    #logout-btn {
+    #logout-btn, #change-password-btn {
       background: #e53e3e;
       color: #fff;
       border: none;
@@ -36,6 +36,10 @@
       border-radius: 4px;
       cursor: pointer;
       margin-top: 0.5rem;
+    }
+    #change-password-btn {
+      background: #f59e0b;
+      margin-left: 10px;
     }
     label {
       display: block;
@@ -78,17 +82,16 @@
       color: #0070f3;
       text-decoration: none;
     }
-
     @media (max-width: 600px) {
       h1 {
         flex-direction: column;
         align-items: flex-start;
       }
-      #logout-btn {
+      #logout-btn, #change-password-btn {
         align-self: flex-end;
+        margin-top: 0.5rem;
       }
     }
-
     #editModal {
       position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
@@ -133,7 +136,10 @@
   <div class="card">
     <h1>
       <span>Dashboard Anda</span>
-      <button id="logout-btn">Logout</button>
+      <div>
+        <button id="logout-btn">Logout</button>
+        <button id="change-password-btn">Tukar Kata Laluan</button>
+      </div>
     </h1>
     <p>Anda login sebagai: <strong><span id="user-email"></span></strong></p>
     <p>Referral Code anda: <strong><span id="user-referral"></span></strong></p>
@@ -183,6 +189,7 @@
     const userEmailEl = document.getElementById('user-email');
     const referralSpan = document.getElementById('user-referral');
     const logoutBtn = document.getElementById('logout-btn');
+    const changePasswordBtn = document.getElementById('change-password-btn');
     const nameIn = document.getElementById('proj-name');
     const codeIn = document.getElementById('ai-code');
     const createBtn = document.getElementById('create-btn');
@@ -199,15 +206,11 @@
     let user;
 
     async function init() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session || !session.user) {
         window.location.href = 'index.html';
         return;
       }
-
       user = session.user;
       userEmailEl.textContent = user.email;
 
@@ -298,25 +301,37 @@
       window.location.href = 'index.html';
     });
 
+    changePasswordBtn.addEventListener('click', async () => {
+      const newPassword = prompt("Masukkan kata laluan baru anda:");
+      if (!newPassword || newPassword.length < 6) {
+        alert("Kata laluan mesti sekurang-kurangnya 6 aksara.");
+        return;
+      }
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) {
+        alert("Gagal tukar kata laluan: " + error.message);
+      } else {
+        alert("Kata laluan berjaya ditukar!");
+        await supabase.from('users').update({ password: newPassword }).eq('email', user.email);
+      }
+    });
+
     createBtn.addEventListener('click', async () => {
       const title = nameIn.value.trim();
       const aiCode = codeIn.value.trim();
       statusP.textContent = '';
-
       if (!title || !aiCode) {
         statusP.style.color = 'red';
         statusP.textContent = 'Sila isi nama projek dan kod AI anda.';
         return;
       }
-
-      const slug = title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-
-      const { error } = await supabase
-        .from('projects')
-        .insert({ email: user.email, title, code: slug, ai_code: aiCode });
+      const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      const { error } = await supabase.from('projects').insert({
+        email: user.email,
+        title,
+        code: slug,
+        ai_code: aiCode
+      });
 
       if (error) {
         statusP.style.color = 'red';
