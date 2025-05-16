@@ -199,16 +199,26 @@
     let user;
 
     async function init() {
-      const { data } = await supabase.auth.getUser();
-      user = data.user;
-      if (!user) {
+      let attempt = 0;
+      let userData = null;
+
+      while (attempt < 10) {
+        const { data } = await supabase.auth.getUser();
+        userData = data.user;
+        if (userData) break;
+        attempt++;
+        await new Promise(r => setTimeout(r, 300));
+      }
+
+      if (!userData) {
         window.location.href = 'index.html';
         return;
       }
+
+      user = userData;
       userEmailEl.textContent = user.email;
 
-      // Paparkan referral_code
-      const { data: userRow, error: referralError } = await supabase
+      const { data: userRow } = await supabase
         .from('users')
         .select('referral_code')
         .eq('email', user.email)
@@ -262,9 +272,7 @@
         .eq('id', id)
         .single();
 
-      if (error) {
-        return alert('Gagal muat kod AI: ' + error.message);
-      }
+      if (error) return alert('Gagal muat kod AI: ' + error.message);
 
       editTextarea.value = data.ai_code || '';
       editModal.style.display = 'flex';
@@ -277,9 +285,7 @@
         .update({ ai_code: newAiCode })
         .eq('id', editingProjectId);
 
-      if (error) {
-        return alert('Gagal simpan: ' + error.message);
-      }
+      if (error) return alert('Gagal simpan: ' + error.message);
 
       alert('Kod AI berjaya dikemas kini!');
       editModal.style.display = 'none';
