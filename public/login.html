@@ -1,46 +1,69 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-  <meta charset="UTF-8">
-  <title>Login - Lancar.my</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <title>Login Pengguna</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
-    body { font-family: Arial; text-align: center; padding: 50px; }
-    input, button { padding: 8px; margin: 5px; }
-    .error { color: red; }
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+    }
+    input {
+      margin: 5px;
+      padding: 8px;
+      width: 250px;
+    }
+    button {
+      padding: 8px 16px;
+    }
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
   <h1>Login Pengguna</h1>
-  <input type="email" id="email" placeholder="Email"><br>
-  <input type="password" id="password" placeholder="Kata Laluan"><br>
+
+  <input type="email" id="email" placeholder="Email" required /><br />
+  <input type="password" id="password" placeholder="Kata Laluan" required /><br />
   <button onclick="login()">Login</button>
-  <p id="status" class="error"></p>
+
+  <div id="message" class="error"></div>
 
   <script>
-    const supabase = supabase.createClient(
+    // ✅ PASTIKAN supabase dicipta dulu
+    const supabase = window.supabase.createClient(
       'https://bpxmqwgxjzphbavaikhq.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0'
     );
 
     async function login() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const status = document.getElementById("status");
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const message = document.getElementById('message');
+
+      message.textContent = '';
+
+      if (!email || !password) {
+        message.textContent = 'Sila masukkan email dan kata laluan.';
+        return;
+      }
 
       const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("email", email)
-        .eq("password", password);
+        .from('users')
+        .select('email, password')
+        .eq('email', email)
+        .eq('password', password)
+        .single();
 
-      if (data.length > 0) {
-        localStorage.setItem("lancar_email", email);
-        localStorage.setItem("lancar_password", password);
-        window.location.href = "dashboard.html";
+      if (error || !data) {
+        message.textContent = 'Tidak boleh login. Email atau kata laluan salah.';
       } else {
-        status.textContent = "Tidak boleh login. Email atau kata laluan salah atau tidak berdaftar.";
+        localStorage.setItem('lancar_email', email);
+        window.location.href = 'dashboard.html';
       }
     }
   </script>
