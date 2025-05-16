@@ -1,42 +1,81 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-  <meta charset="UTF-8">
-  <title>Halaman Utama</title>
-  <link rel="stylesheet" href="styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lancar.my</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 100px;
+    }
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    input[type="email"] {
+      padding: 10px;
+      width: 80%;
+      margin: 10px 0;
+    }
+    button {
+      padding: 10px 20px;
+      margin-top: 5px;
+    }
+    #login-section {
+      margin-top: 50px;
+    }
+    .note {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+  </style>
 </head>
 <body>
-  <div style="text-align:center; margin-top: 20%;">
+  <div class="container">
     <h1>Selamat Datang ke Lancar.my</h1>
-    <input type="email" id="email" placeholder="Masukkan Email Anda" required />
-    <br><br>
-    <button onclick="daftar()">DAFTAR</button>
-    <p id="statusP"></p>
+
+    <input type="email" id="email" placeholder="Masukkan Email Anda" />
+    <br/>
+    <button onclick="buatPembayaran()">DAFTAR</button>
+
+    <div id="login-section">
+      <div class="note">Sudah berdaftar? Terus login di bawah:</div>
+      <button onclick="window.location.href='login.html'">Login</button>
+    </div>
+
+    <p id="status" style="color: red;"></p>
   </div>
 
   <script>
-    async function daftar() {
-      const email = document.getElementById("email").value;
-      const statusP = document.getElementById("statusP");
-      statusP.style.color = 'black';
-      statusP.textContent = 'Sediakan pembayaran…';
+    async function buatPembayaran() {
+      const email = document.getElementById("email").value.trim();
+      const statusP = document.getElementById("status");
+      if (!email) {
+        statusP.textContent = "Sila masukkan email terlebih dahulu.";
+        return;
+      }
+
+      statusP.style.color = "black";
+      statusP.textContent = "Sediakan pembayaran...";
 
       try {
-        const resp = await fetch('/api/create-bill', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const resp = await fetch("/api/create-bill", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email })
         });
 
         const j = await resp.json();
-        if (!j.billCode) throw new Error(j.error || 'Tiada BillCode');
+        if (!j.billCode) throw new Error(j.error || "Tiada BillCode");
 
-        // Redirect ke laman bil ToyyibPay
         window.location.href = `https://dev.toyyibpay.com/${j.billCode}`;
       } catch (err) {
-        statusP.style.color = 'red';
-        statusP.textContent = 'Ralat: ' + err.message;
+        statusP.style.color = "red";
+        statusP.textContent = "Ralat: " + err.message;
       }
     }
   </script>
