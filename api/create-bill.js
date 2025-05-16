@@ -17,8 +17,9 @@ export default async function handler(req, res) {
     billName: "Pendaftaran Pengguna Lancar.my",
     billDescription: "Akses penuh untuk bina landing page",
     billPriceSetting: "fixed",
-    billPayorInfo: "1", // ✅ MESTI string nombor, bukan boolean
-    billAmount: "100", // RM1.00 dalam sen
+    billPayorInfo: "1", // ✅ Diperlukan dalam format string nombor
+    billPhone: "0100000000", // ✅ WAJIB — walaupun dummy
+    billAmount: "100", // RM1.00
     billReturnUrl: "https://www.lancar.my/successpayment.html?email=" + email + "&status_id=1",
     billCallbackUrl: "",
     billExternalReferenceNo: Date.now().toString(),
