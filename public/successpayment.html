@@ -1,22 +1,75 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Pembayaran - Lancar.my</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+    const supabase = createClient(
+      'https://bpxmqwgxjzphbavaikhq.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0'
+    );
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const status_id = urlParams.get('status_id');
+    const email = urlParams.get('email');
+
+    const password = Math.random().toString(36).slice(-8);
+    const referralCode = Math.random().toString(36).substr(2, 6).toUpperCase();
+
+    const statusEl = document.getElementById("status");
+    const msgEl = document.getElementById("message");
+    const infoEl = document.getElementById("loginInfo");
+
+    async function prosesPembayaran() {
+      if (status_id === "1" && email) {
+        statusEl.textContent = "Terima kasih atas pembayaran anda!";
+        msgEl.innerHTML = '<span class="blue">Sila salin kata laluan login anda di bawah.</span>';
+
+        // 1. Register user ke Supabase Auth
+        const { data: signupData, error: signupError } = await supabase.auth.signUp({
+          email: email,
+          password: password
+        });
+
+        if (signupError) {
+          console.error("Auth error:", signupError.message);
+          msgEl.textContent = "Ralat daftar pengguna: " + signupError.message;
+          msgEl.classList.add("error");
+          return;
+        }
+
+        // 2. Masukkan juga dalam table `users`
+        const { data: insertData, error: insertError } = await supabase
+          .from("users")
+          .insert([{ email, referral_code: referralCode, password }]);
+
+        if (insertError) {
+          console.error("Insert error:", insertError.message);
+        }
+
+        // 3. Simpan dalam localStorage
+        localStorage.setItem("lancar_email", email);
+        localStorage.setItem("lancar_password", password);
+
+        infoEl.innerHTML = `
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Kata Laluan:</strong> <span class="blue">${password}</span></p>
+        `;
+      } else {
+        statusEl.textContent = "PEMBAYARAN GAGAL";
+        statusEl.classList.add("error");
+        msgEl.textContent = "Sila cuba lagi atau hubungi sokongan.";
+      }
+    }
+
+    prosesPembayaran();
+  </script>
   <style>
-    body {
-      font-family: Arial;
-      text-align: center;
-      padding: 50px;
-    }
-    .blue {
-      color: #007bff;
-      font-weight: bold;
-    }
-    .error {
-      color: red;
-    }
+    body { font-family: Arial; text-align: center; padding: 50px; }
+    .blue { color: #007bff; font-weight: bold; }
+    .error { color: red; }
   </style>
 </head>
 <body>
@@ -24,51 +77,5 @@
   <p id="message"></p>
   <div id="loginInfo" style="margin-top: 20px;"></div>
   <button onclick="window.location.href='login.html'">Login</button>
-
-  <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const status_id = urlParams.get('status_id');
-    const email = urlParams.get('email');
-
-    const client = supabase.createClient(
-      'https://bpxmqwgxjzphbavaikhq.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0'
-    );
-
-    async function prosesPembayaran() {
-      if (status_id === "1" && email) {
-        document.getElementById("status").textContent = "Terima kasih atas pembayaran anda!";
-        document.getElementById("message").innerHTML = '<span class="blue">Sila salin kata laluan login anda di bawah.</span>';
-
-        const password = Math.random().toString(36).slice(-8);
-        const referralCode = Math.random().toString(36).substr(2, 6).toUpperCase();
-
-        const { error: insertError } = await client.from("users").insert([
-          { email: email, referral_code: referralCode, password: password }
-        ]);
-
-        if (insertError) {
-          console.error("Supabase error:", insertError.message);
-          document.getElementById("status").textContent = "Ralat semasa menyimpan data.";
-          document.getElementById("status").classList.add("error");
-          return;
-        }
-
-        localStorage.setItem("lancar_email", email);
-        localStorage.setItem("lancar_password", password);
-
-        document.getElementById("loginInfo").innerHTML = `
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Kata Laluan:</strong> <span class="blue">${password}</span></p>
-        `;
-      } else {
-        document.getElementById("status").textContent = "PEMBAYARAN GAGAL";
-        document.getElementById("status").classList.add("error");
-        document.getElementById("message").textContent = "Sila cuba lagi atau hubungi sokongan.";
-      }
-    }
-
-    prosesPembayaran();
-  </script>
 </body>
 </html>
