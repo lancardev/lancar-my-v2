@@ -199,23 +199,16 @@
     let user;
 
     async function init() {
-      let attempt = 0;
-      let userData = null;
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      while (attempt < 10) {
-        const { data } = await supabase.auth.getUser();
-        userData = data.user;
-        if (userData) break;
-        attempt++;
-        await new Promise(r => setTimeout(r, 300));
-      }
-
-      if (!userData) {
+      if (!session || !session.user) {
         window.location.href = 'index.html';
         return;
       }
 
-      user = userData;
+      user = session.user;
       userEmailEl.textContent = user.email;
 
       const { data: userRow } = await supabase
@@ -272,7 +265,9 @@
         .eq('id', id)
         .single();
 
-      if (error) return alert('Gagal muat kod AI: ' + error.message);
+      if (error) {
+        return alert('Gagal muat kod AI: ' + error.message);
+      }
 
       editTextarea.value = data.ai_code || '';
       editModal.style.display = 'flex';
@@ -285,7 +280,9 @@
         .update({ ai_code: newAiCode })
         .eq('id', editingProjectId);
 
-      if (error) return alert('Gagal simpan: ' + error.message);
+      if (error) {
+        return alert('Gagal simpan: ' + error.message);
+      }
 
       alert('Kod AI berjaya dikemas kini!');
       editModal.style.display = 'none';
