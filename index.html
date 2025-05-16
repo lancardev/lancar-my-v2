@@ -1,128 +1,14 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Lancar.my – Daftar & Login</title>
-  <link rel="stylesheet" href="styles.css"/>
-  <style>
-    .auth-form { display:flex; flex-direction:column; align-items:center; gap:.5rem; margin-top:2rem; }
-    .auth-form input { padding:.5rem; width:280px; }
-    .btn-group { display:flex; gap:1rem; margin-top:.5rem; }
-    .btn { padding:.5rem 1rem; border:none; border-radius:4px; cursor:pointer; }
-    .btn-register { background:#28a745; color:#fff; }
-    .btn-login    { background:#0070f3; color:#fff; }
-    #status { height:1.2rem; color:red; margin-top:.5rem; text-align:center; }
-  </style>
+  <meta charset="UTF-8">
+  <title>Lancar.my - Halaman Utama</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="hero" style="text-align:center; padding:2rem;">
-    <h1>Bina Laman Web Anda Tanpa Perlu tahu Coding! Lets Go!MANTAP BOH!!</h1>
-    <p>Daftar untuk terus ke pembayaran, atau Login jika sudah daftar.</p>
-
-    <div class="auth-form">
-      <input type="email" id="email" placeholder="Email anda"/>
-      <input type="password" id="password" placeholder="Kata Laluan"/>
-      <div class="btn-group">
-        <button id="register-btn" class="btn btn-register">Daftar</button>
-        <button id="login-btn"    class="btn btn-login">Login</button>
-      </div>
-      <p id="status"></p>
-    </div>
-  </header>
-
-  <script type="module">
-    import { createClient } 
-      from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
-    // GANTI dengan milik anda
-    const SUPABASE_URL      = 'https://bpxmqwgxjzphbavaikhq.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    const emailIn  = document.getElementById('email');
-    const passIn   = document.getElementById('password');
-    const statusP  = document.getElementById('status');
-    const regBtn   = document.getElementById('register-btn');
-    const logBtn   = document.getElementById('login-btn');
-
-    function makeReferral() {
-      return Math.random().toString(36).substr(2,6).toUpperCase();
-    }
-
-    // ----------------------------
-    // 1) DAFTAR → signup + simpan referral + pembayaran
-    // ----------------------------
-    regBtn.onclick = async () => {
-      statusP.style.color = 'red'; statusP.textContent = '';
-      const email = emailIn.value.trim(), pass = passIn.value;
-      if (!email || !pass) {
-        return statusP.textContent = 'Sila lengkapkan kedua-dua ruang.';
-      }
-
-      // a) Cek duplicate
-      const { data: ex } = await supabase
-        .from('users')
-        .select('email')
-        .eq('email', email)
-        .maybeSingle();
-      if (ex) {
-        return statusP.textContent = 'Email sudah daftar, sila Login.';
-      }
-
-      // b) Signup di Supabase Auth (session akan diset terus)
-      const { data: d1, error: e1 } = await supabase.auth.signUp({
-        email, password: pass
-      });
-      if (e1) {
-        return statusP.textContent = 'Daftar gagal: ' + e1.message;
-      }
-
-      // c) Simpan ke jadual users + referral_code
-      const ref = makeReferral();
-      const { error: e2 } = await supabase
-        .from('users')
-        .insert({ email, referral_code: ref });
-      if (e2) {
-        return statusP.textContent = 'Gagal simpan user: ' + e2.message;
-      }
-
-      // d) Panggil API create-bill
-      statusP.style.color = 'black';
-      statusP.textContent = 'Sediakan pembayaran…';
-      try {
-        const resp = await fetch('/api/create-bill', {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify({ email })
-        });
-        const j = await resp.json();
-        if (!j.billCode) throw new Error(j.error||'Tiada BillCode');
-        // e) Redirect terus ke ToyyibPay
-        window.location.href = `https://dev.toyyibpay.com/${j.billCode}`;
-      } catch(err) {
-        statusP.textContent = 'Ralat: ' + err.message;
-      }
-    };
-
-    // ----------------------------
-    // 2) LOGIN → signIn biasa
-    // ----------------------------
-    logBtn.onclick = async () => {
-      statusP.style.color = 'red'; statusP.textContent = '';
-      const email = emailIn.value.trim(), pass = passIn.value;
-      if (!email || !pass) {
-        return statusP.textContent = 'Sila lengkapkan kedua-dua medan.';
-      }
-      const { error } = await supabase.auth.signInWithPassword({
-        email, password: pass
-      });
-      if (error) {
-        statusP.textContent = 'Login gagal: ' + error.message;
-      } else {
-        window.location.href = 'dashboard.html';
-      }
-    };
-  </script>
+  <div style="text-align:center; margin-top: 20%;">
+    <h1>Selamat Datang ke Lancar.my</h1>
+    <button onclick="window.location.href='https://dev.toyyibpay.com/{YOUR_BILL_CODE}'">DAFTAR</button>
+  </div>
 </body>
 </html>

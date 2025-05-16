@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <title>Pembayaran Berjaya - Lancar.my</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+  <style>
+    body { font-family: Arial; text-align: center; padding: 50px; }
+    .blue { color: #007bff; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1 id="status">Memeriksa status pembayaran...</h1>
+  <p id="message"></p>
+  <button onclick="window.location.href='login.html'">Login</button>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const billcode = urlParams.get('billcode');
+    const status_id = urlParams.get('status_id');
+    const email = urlParams.get('email');
+
+    const supabaseUrl = 'https://bpxmqwgxjzphbavaikhq.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0';
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    emailjs.init("user_default"); // Replace with your EmailJS user ID
+
+    async function handlePayment() {
+      if (status_id === "1") {
+        document.getElementById("status").textContent = "Terima kasih atas pembayaran anda!";
+        document.getElementById("message").innerHTML = '<span class="blue">Sila semak email anda untuk kata laluan login.</span>';
+
+        const randomPassword = Math.random().toString(36).slice(-8);
+        const referralCode = Math.random().toString(36).substr(2, 6).toUpperCase();
+
+        const { data, error } = await supabase.from("users").insert([
+          { email: email, referral_code: referralCode }
+        ]);
+
+        await emailjs.send("service_default", "template_default", {
+          to_email: email,
+          message: "Kata laluan login anda: " + randomPassword
+        });
+
+        localStorage.setItem("lancar_email", email);
+        localStorage.setItem("lancar_password", randomPassword);
+      } else {
+        document.getElementById("status").textContent = "PEMBAYARAN GAGAL";
+        document.getElementById("message").textContent = "Sila cuba lagi atau hubungi sokongan.";
+      }
+    }
+
+    handlePayment();
+  </script>
+</body>
+</html>

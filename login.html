@@ -1,61 +1,43 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Masuk ke Lancar.my</title>
-  <link rel="stylesheet" href="styles.css"/>
+  <title>Login - Lancar.my</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 3rem; }
+    input { padding: 0.5rem; margin: 0.5rem; width: 250px; }
+    button { padding: 0.5rem 1.5rem; }
+    .error { color: red; margin-top: 1rem; }
+  </style>
 </head>
 <body>
-  <main class="hero">
-    <h2>Masuk ke Lancar.my</h2>
-    <p>Masukkan e-mel & kata laluan anda untuk akses dashboard.</p>
-    <input type="email" id="email" placeholder="you@domain.com"
-           style="padding:.5rem; width:250px; margin-right:1rem;"/>
-    <input type="password" id="password" placeholder="Kata laluan"
-           style="padding:.5rem; width:250px; margin-right:1rem;"/>
-    <button id="login-btn" class="btn-primary">Masuk</button>
-    <p id="msg" style="color:red; margin-top:1rem;"></p>
-  </main>
+  <h1>Login ke Lancar.my</h1>
+  <input type="email" id="email" placeholder="Email" required><br>
+  <input type="password" id="password" placeholder="Kata Laluan" required><br>
+  <button onclick="login()">Login</button>
+  <div class="error" id="errorMsg"></div>
 
-  <script type="module">
-    import { createClient } 
-      from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+  <script>
+    const supabase = supabase.createClient(
+      'https://bpxmqwgxjzphbavaikhq.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0'
+    );
 
-    // GANTI dengan Supabase anda
-    const SUPABASE_URL      = 'https://bpxmqwgxjzphbavaikhq.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    async function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const savedEmail = localStorage.getItem("lancar_email");
+      const savedPass = localStorage.getItem("lancar_password");
 
-    const emailIn = document.getElementById('email');
-    const passIn  = document.getElementById('password');
-    const btn     = document.getElementById('login-btn');
-    const msgP    = document.getElementById('msg');
-
-    // Prefill e-mel dari query string
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('email')) {
-      emailIn.value = params.get('email');
-    }
-
-    btn.addEventListener('click', async () => {
-      const email = emailIn.value.trim();
-      const pass  = passIn.value;
-      if (!email || !pass) {
-        msgP.textContent = 'Sila lengkapkan e-mail serta kata laluan.';
-        return;
-      }
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email, password: pass
-      });
-
-      if (error) {
-        msgP.textContent = `Gagal login: ${error.message}`;
+      if (email === savedEmail && password === savedPass) {
+        window.location.href = "dashboard.html";
       } else {
-        window.location.href = 'dashboard.html';
+        document.getElementById("errorMsg").textContent = "Tidak boleh login sebab tidak berdaftar.";
       }
-    });
+    }
   </script>
 </body>
 </html>
