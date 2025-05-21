@@ -2,13 +2,23 @@
   "rewrites": [
     {
       "source": "/",
-      "has": [
-        {
-          "type": "host",
-          "value": "*.lancar.my"
-        }
-      ],
-      "destination": "/api/serve-subdomain"
+      "destination": "/public/index.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/public/dashboard.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/public/login.html"
+    },
+    {
+      "source": "/successpayment",
+      "destination": "/public/successpayment.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/api/serve-subdomain.js"
     }
   ]
 }
