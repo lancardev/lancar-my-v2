@@ -1,5 +1,3 @@
-// api/serve-subdomain.js
-
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(

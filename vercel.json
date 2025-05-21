@@ -2,7 +2,12 @@
   "rewrites": [
     {
       "source": "/",
-      "has": [{ "type": "host", "value": ":subdomain.lancar.my" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "*.lancar.my"
+        }
+      ],
       "destination": "/api/serve-subdomain"
     }
   ]
