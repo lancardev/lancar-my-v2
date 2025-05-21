@@ -6,11 +6,12 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
-  const host = req.headers.host; // contoh: helloworld1.lancar.my
+  const host = req.headers.host; // helloworld1.lancar.my
   const subdomain = host.split(".")[0];
 
-  if (!subdomain || subdomain === "lancar" || subdomain === "www") {
-    return res.status(404).send("Not Found");
+  // Abaikan main domain
+  if (!subdomain || subdomain === "www" || subdomain === "lancar") {
+    return res.status(404).send("Not found");
   }
 
   const { data, error } = await supabase
@@ -19,10 +20,10 @@ export default async function handler(req, res) {
     .eq("title", subdomain)
     .single();
 
-  if (error || !data || !data.code) {
-    return res.status(404).send("Subdomain not found.");
+  if (error || !data) {
+    return res.status(404).send("No project found for this subdomain.");
   }
 
   res.setHeader("Content-Type", "text/html");
-  return res.status(200).send(data.code);
+  res.status(200).send(data.code);
 }

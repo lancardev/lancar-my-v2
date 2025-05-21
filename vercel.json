@@ -5,12 +5,12 @@
       "destination": "/public/index.html"
     },
     {
-      "source": "/dashboard.html",
-      "destination": "/public/dashboard.html"
-    },
-    {
       "source": "/login.html",
       "destination": "/public/login.html"
+    },
+    {
+      "source": "/dashboard.html",
+      "destination": "/public/dashboard.html"
     },
     {
       "source": "/successpayment.html",
