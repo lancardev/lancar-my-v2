@@ -1,23 +1,40 @@
-export default async function handler(req, res) {
-  const host = req.headers.host || "";
-  const subdomain = host.split(".")[0];
+const { createClient } = require('@supabase/supabase-js');
 
-  // Sambung ke Supabase
-  const SUPABASE_URL = "https://bpxmqwgxjzphbavaikhq.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJweG1xd2d4anpwaGJhdmFpa2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyODI4MzIsImV4cCI6MjA2MTg1ODgzMn0.4Xqo2frDn8h09IZDSpDQdfv9LQO5g3tyPomHie0iAo0";
-  const { createClient } = require("@supabase/supabase-js");
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
+module.exports = async (req, res) => {
+  // Dapatkan subdomain dari URL
+  const subdomain = req.query[0];
+
+  // Ambil data projek berdasarkan subdomain
   const { data, error } = await supabase
-    .from("projects")
-    .select("code")
-    .eq("title", subdomain)
+    .from('projects')
+    .select('title, code')
+    .eq('title', subdomain)
     .single();
 
-  if (error || !data) {
-    return res.status(404).send("Projek tidak dijumpai.");
+  if (error) {
+    return res.status(404).json({ error: 'Subdomain tidak dijumpai' });
   }
 
-  res.setHeader("Content-Type", "text/html");
-  res.send(data.code);
-}
+  // Render HTML dengan kod yang diperoleh dari Supabase
+  res.setHeader('Content-Type', 'text/html');
+  res.status(200).send(`
+    <!DOCTYPE html>
+    <html lang="ms">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${data.title}</title>
+      <link rel="stylesheet" href="/styles.css">
+    </head>
+    <body>
+      <h1>${data.title}</h1>
+      <pre>${data.code}</pre>
+    </body>
+    </html>
+  `);
+};
