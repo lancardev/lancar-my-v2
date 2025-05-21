@@ -1,33 +1,28 @@
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_ANON_KEY
 );
 
-module.exports = async (req, res) => {
-  const host = req.headers.host || '';
-  const mainDomain = 'lancar.my';
+export default async function handler(req, res) {
+  const host = req.headers.host; // contoh: helloworld1.lancar.my
+  const subdomain = host.split(".")[0];
 
-  // Pisahkan subdomain
-  const subdomain = host.endsWith(mainDomain)
-    ? host.replace(`.${mainDomain}`, '')
-    : null;
-
-  if (!subdomain || subdomain === 'www' || subdomain === 'lancar') {
-    return res.status(404).send('Subdomain tidak sah.');
+  if (!subdomain || subdomain === "lancar" || subdomain === "www") {
+    return res.status(404).send("Not Found");
   }
 
   const { data, error } = await supabase
-    .from('projects')
-    .select('title, code')
-    .eq('title', subdomain)
+    .from("projects")
+    .select("code")
+    .eq("title", subdomain)
     .single();
 
-  if (error || !data) {
-    return res.status(404).send('Subdomain tidak dijumpai.');
+  if (error || !data || !data.code) {
+    return res.status(404).send("Subdomain not found.");
   }
 
-  res.setHeader('Content-Type', 'text/html');
-  res.status(200).send(data.code);
-};
+  res.setHeader("Content-Type", "text/html");
+  return res.status(200).send(data.code);
+}

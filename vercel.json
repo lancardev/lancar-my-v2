@@ -5,24 +5,26 @@
       "destination": "/public/index.html"
     },
     {
-      "source": "/login",
-      "destination": "/public/login.html"
-    },
-    {
-      "source": "/dashboard",
+      "source": "/dashboard.html",
       "destination": "/public/dashboard.html"
     },
     {
-      "source": "/successpayment",
+      "source": "/login.html",
+      "destination": "/public/login.html"
+    },
+    {
+      "source": "/successpayment.html",
       "destination": "/public/successpayment.html"
     },
     {
-      "source": "/styles.css",
-      "destination": "/public/styles.css"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/api/serve-subdomain.js"
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": ":subdomain.lancar.my"
+        }
+      ],
+      "destination": "/api/serve-subdomain"
     }
   ]
 }
