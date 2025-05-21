@@ -6,10 +6,9 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
-  const host = req.headers.host; // helloworld1.lancar.my
+  const host = req.headers.host;
   const subdomain = host.split(".")[0];
 
-  // Abaikan main domain
   if (!subdomain || subdomain === "www" || subdomain === "lancar") {
     return res.status(404).send("Not found");
   }
