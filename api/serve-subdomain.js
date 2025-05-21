@@ -1,19 +1,23 @@
+// api/serve-subdomain.js
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
 export default async function handler(req, res) {
-  const host = req.headers.host;
-  const subdomain = host.split('.')[0]; // e.g., helloworld1
+  const host = req.headers.host || '';
+  const subdomain = host.split('.')[0];
 
-  if (!subdomain || subdomain === 'lancar') {
-    res.status(404).send('Not Found');
-    return;
+  // Abaikan jika akses utama
+  if (subdomain === 'www' || subdomain === 'lancar') {
+    res.writeHead(302, { Location: '/index.html' });
+    return res.end();
   }
 
+  // Cari kod AI dari Supabase ikut subdomain
   const { data, error } = await supabase
     .from('projects')
     .select('code')
@@ -21,10 +25,9 @@ export default async function handler(req, res) {
     .single();
 
   if (error || !data) {
-    res.status(404).send('Subdomain not found');
-    return;
+    return res.status(404).send('Subdomain tidak dijumpai');
   }
 
   res.setHeader('Content-Type', 'text/html');
-  res.status(200).send(data.code);
+  return res.status(200).send(data.code);
 }
