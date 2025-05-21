@@ -1,0 +1,14 @@
+{
+  "rewrites": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": ":subdomain.lancar.my"
+        }
+      ],
+      "destination": "/api/serve-subdomain"
+    }
+  ]
+}
