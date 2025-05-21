@@ -6,35 +6,28 @@ const supabase = createClient(
 );
 
 module.exports = async (req, res) => {
-  // Dapatkan subdomain dari URL
-  const subdomain = req.query[0];
+  const host = req.headers.host || '';
+  const mainDomain = 'lancar.my';
 
-  // Ambil data projek berdasarkan subdomain
+  // Pisahkan subdomain
+  const subdomain = host.endsWith(mainDomain)
+    ? host.replace(`.${mainDomain}`, '')
+    : null;
+
+  if (!subdomain || subdomain === 'www' || subdomain === 'lancar') {
+    return res.status(404).send('Subdomain tidak sah.');
+  }
+
   const { data, error } = await supabase
     .from('projects')
     .select('title, code')
     .eq('title', subdomain)
     .single();
 
-  if (error) {
-    return res.status(404).json({ error: 'Subdomain tidak dijumpai' });
+  if (error || !data) {
+    return res.status(404).send('Subdomain tidak dijumpai.');
   }
 
-  // Render HTML dengan kod yang diperoleh dari Supabase
   res.setHeader('Content-Type', 'text/html');
-  res.status(200).send(`
-    <!DOCTYPE html>
-    <html lang="ms">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${data.title}</title>
-      <link rel="stylesheet" href="/styles.css">
-    </head>
-    <body>
-      <h1>${data.title}</h1>
-      <pre>${data.code}</pre>
-    </body>
-    </html>
-  `);
+  res.status(200).send(data.code);
 };

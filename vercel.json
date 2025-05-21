@@ -1,8 +1,28 @@
 {
   "rewrites": [
     {
-      "source": "/:subdomain",
-      "destination": "/api/serve-subdomain"
+      "source": "/",
+      "destination": "/public/index.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/public/login.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/public/dashboard.html"
+    },
+    {
+      "source": "/successpayment",
+      "destination": "/public/successpayment.html"
+    },
+    {
+      "source": "/styles.css",
+      "destination": "/public/styles.css"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/api/serve-subdomain.js"
     }
   ]
 }
