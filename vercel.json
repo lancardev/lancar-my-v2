@@ -1,19 +1,8 @@
 {
-  "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "public/index.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "api/serve-subdomain.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/([a-zA-Z0-9-]+).lancar.my",
-      "dest": "/api/serve-subdomain.js"
+      "source": "/:subdomain",
+      "destination": "/api/serve-subdomain"
     }
   ]
 }
