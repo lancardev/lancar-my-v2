@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   const host = req.headers.host || '';
   const subdomain = host.split('.')[0];
 
-  if (!subdomain || subdomain === 'lancar') {
+  if (!subdomain || subdomain === 'lancar' || subdomain === 'www') {
     return res.status(404).send('Subdomain not found');
   }
 
