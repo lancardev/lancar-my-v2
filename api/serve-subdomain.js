@@ -1,28 +1,20 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-);
+import fs from 'fs';
+import path from 'path';
 
 export default async function handler(req, res) {
-  const host = req.headers.host || '';
-  const subdomain = host.split('.')[0];
+  const { subdomain } = req.query;
 
-  if (!subdomain || subdomain === 'lancar' || subdomain === 'www') {
-    return res.status(404).send('Subdomain not found');
+  if (!subdomain) {
+    return res.status(400).send('Subdomain is required.');
   }
 
-  const { data, error } = await supabase
-    .from('projects')
-    .select('code')
-    .eq('title', subdomain)
-    .single();
+  const filePath = path.join(process.cwd(), 'projects', `${subdomain}.html`);
 
-  if (error || !data) {
-    return res.status(404).send('Project not found');
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).send('Website not found.');
   }
 
+  const html = fs.readFileSync(filePath, 'utf-8');
   res.setHeader('Content-Type', 'text/html');
-  res.send(data.code);
+  res.send(html);
 }

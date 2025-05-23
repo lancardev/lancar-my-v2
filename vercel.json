@@ -1,18 +1,14 @@
 {
   "rewrites": [
     {
-      "source": "/",
-      "destination": "/public/index.html"
-    },
-    {
-      "source": "/:match*",
+      "source": "/:path*",
       "has": [
         {
           "type": "host",
           "value": ":subdomain.lancar.my"
         }
       ],
-      "destination": "/api/serve-subdomain"
+      "destination": "/api/serve-subdomain?subdomain=:subdomain"
     }
   ]
 }
