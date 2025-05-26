@@ -8,17 +8,18 @@ export default function Page({ html }) {
 }
 
 export async function getServerSideProps({ req }) {
+  // 1) Tentukan host/subdomain
   const host = (req.headers.host || '').split(':')[0]
   const subdomain = host.split('.')[0]
 
-  // 1) If this is the root domain, load the static file:
+  // 2) Jika root domain, keluarkan static homepage
   if (host === 'lancar.my' || host === 'www.lancar.my') {
     const filePath = path.join(process.cwd(), 'public', 'static', 'index.html')
     const html = fs.readFileSync(filePath, 'utf8')
     return { props: { html } }
   }
 
-  // 2) Otherwise it’s a subdomain – fetch the user's AI code:
+  // 3) Otherwise, panggil Supabase ikut subdomain
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -29,10 +30,10 @@ export async function getServerSideProps({ req }) {
     .eq('code', subdomain)
     .single()
 
-  let html = `<h1>Subdomain “${subdomain}” not found</h1>`
+  // 4) Fallback “not found”
+  let html = `<h1>Subdomain “${subdomain}” tidak dijumpai</h1>`
   if (!error && data?.ai_code) {
     html = data.ai_code
   }
-
   return { props: { html } }
 }
